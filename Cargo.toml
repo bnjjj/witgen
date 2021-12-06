@@ -1,0 +1,12 @@
+[package]
+name = "witgen"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+witgen_macro = { path = "crates/witgen_macro" }
+
+[workspace]
+members = ["crates/witgen_macro", "crates/cargo_witgen"]
