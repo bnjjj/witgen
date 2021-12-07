@@ -67,3 +67,7 @@ variant TestEnum {
 
 test : function(other: list <u8>, test_struct: TestStruct, other_enum: TestEnum) -> expected<tuple<string, s64>>
 ```
+
+## Development
+
+It's a very minimal version, it doesn't already support all kinds of types but the main used are supported. I made it to easily generate `.wit` files for my need. Feel free to create issues or pull-requests if you need something. I will be happy to help you !
