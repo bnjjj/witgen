@@ -1,46 +1,46 @@
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
-use clap::{App, SubCommand};
+use clap::{crate_version, AppSettings, FromArgMatches, IntoApp};
 use once_cell::sync::OnceCell;
 
 use std::{
-    env::{self, args},
+    env,
     fs::{self, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
-    process::{self, Command},
+    process::Command,
     time::SystemTime,
 };
+
+use crate::opt::Opt;
+
+mod opt;
 
 static TARGET_PATH: OnceCell<PathBuf> = OnceCell::new();
 
 fn main() -> Result<()> {
     let target_dir = TARGET_PATH.get_or_init(get_target_dir);
-    let args = env::args_os().skip(1);
+    let args = env::args_os().skip(2);
 
-    let matches = App::new("witgen")
-        .about("CLI to generate wit files thanks to wit_generator crate")
-        .subcommand(
-            // App::new("witgen")
-            // .subcommand(
-            SubCommand::with_name("generate").about("generate wit files"), // ),
-        )
+    let matches = Opt::into_app()
+        .version(crate_version!())
+        .bin_name("cargo witgen")
+        .setting(AppSettings::NoBinaryName)
         .get_matches_from(args);
 
-    match matches.subcommand() {
-        ("generate", Some(_args)) => {
-            run_generate(target_dir)?;
-        }
-        _ => {
-            eprintln!("Command not found");
-            process::exit(1);
+    let matches =
+        Opt::from_arg_matches(&matches).ok_or_else(|| anyhow::anyhow!("Command not found"))?;
+
+    match matches.command {
+        opt::Command::Generate { output, args } => {
+            run_generate(target_dir, output, args)?;
         }
     }
 
     Ok(())
 }
 
-fn run_generate(target_dir: &Path) -> Result<()> {
+fn run_generate(target_dir: &Path, output: Option<PathBuf>, cargo_args: Vec<String>) -> Result<()> {
     anyhow::ensure!(
         Path::new("Cargo.toml").exists(),
         r#"Failed to read `Cargo.toml`.
@@ -53,7 +53,7 @@ hint: This command only works in the manifest directory of a Cargo package."#
 
     let check_status = Command::new(&cargo)
         .arg("rustc")
-        .args(args().skip(3))
+        .args(cargo_args)
         .arg("--")
         .arg("--emit")
         .arg("dep-info,metadata")
@@ -71,13 +71,13 @@ hint: This command only works in the manifest directory of a Cargo package."#
     }
 
     let pattern = target_dir.join("*.wit");
+    let filename = output.unwrap_or_else(|| PathBuf::from("witgen.wit"));
 
-    // TODO: find better filename
     let mut file = OpenOptions::new()
         .write(true)
         .truncate(true)
         .create(true)
-        .open("witgen.wit")
+        .open(filename)
         .expect("cannot create file to generate wit");
 
     for path in glob::glob(
@@ -92,7 +92,7 @@ hint: This command only works in the manifest directory of a Cargo package."#
         file.write_all(&content[..])
             .expect("cannot write to wit file");
 
-        // lazily remove the file, we don't care too much if we can't
+        // We don't care too much if we can't remove it
         let _ = fs::remove_file(&path);
     }
     file.flush().expect("cannot flush wit file");

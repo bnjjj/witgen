@@ -1,7 +1,5 @@
 use std::{
     fmt::Write,
-    fs::OpenOptions,
-    io::Write as IoWrite,
     path::{Path, PathBuf},
 };
 
@@ -9,7 +7,7 @@ use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 use syn::{ItemEnum, ItemFn, ItemStruct, ItemType, ReturnType, Type};
 
-use crate::{hash_string, write_to_file, ToWitType};
+use crate::{write_to_file, ToWitType};
 
 pub(crate) fn get_target_dir() -> PathBuf {
     let metadata = MetadataCommand::new()

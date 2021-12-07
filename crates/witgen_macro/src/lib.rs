@@ -6,7 +6,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use generator::{gen_wit_enum, gen_wit_function, gen_wit_struct, get_target_dir};
-use once_cell::sync::{Lazy, OnceCell};
+use once_cell::sync::OnceCell;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::ToTokens;
@@ -15,8 +15,6 @@ use syn::{parse, ItemEnum, ItemFn, ItemStruct, Type};
 mod generator;
 
 static TARGET_PATH: OnceCell<PathBuf> = OnceCell::new();
-
-pub(crate) const TARGET_SUFFIX: &str = "witgen";
 
 macro_rules! handle_error {
     ($op: expr) => {
@@ -49,9 +47,11 @@ pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let enm = parse::<ItemEnum>(item.clone());
     if let Ok(enm) = &enm {
-        gen_wit_enum(target_dir, enm);
+        handle_error!(gen_wit_enum(target_dir, enm));
         return item;
     }
+
+    // TODO add enum
 
     syn::Error::new_spanned(
         proc_macro2::TokenStream::from(item),
