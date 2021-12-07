@@ -67,8 +67,3 @@ variant TestEnum {
 
 test : function(other: list <u8>, test_struct: TestStruct, other_enum: TestEnum) -> expected<tuple<string, s64>>
 ```
-
-## Roadmap:
-
-- Implement proc macro `#[witgen]` to put on enum, struct and functions
-- Add proc_macro options (rename, file ?, ...)
