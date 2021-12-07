@@ -12,7 +12,7 @@ keywords = ["webassembly", "generate", "cargo", "wasm"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-witgen_macro = { path = "crates/witgen_macro" }
+witgen_macro = { path = "crates/witgen_macro", version = "0.1" }
 
 [workspace]
 members = ["crates/witgen_macro", "crates/cargo_witgen"]
