@@ -1,19 +1,20 @@
 [package]
 name = "witgen"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "witgen is a library to help you generate wit definitions in a wit file for WebAssembly"
 license-file = "LICENSE"
 readme = "README.md"
 repository = "https://github.com/bnjjj/witgen"
+homepage = "https://github.com/bnjjj/witgen"
 keywords = ["webassembly", "generate", "cargo", "wasm"]
-# Add categories, homepage
+categories = ["wasm", "development-tools", "encoding"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-witgen_macro = { path = "crates/witgen_macro", version = "0.1" }
+witgen_macro = { path = "crates/witgen_macro", version = "0.2" }
 
 [workspace]
 members = ["crates/witgen_macro", "crates/cargo_witgen"]

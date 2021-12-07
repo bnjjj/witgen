@@ -1,3 +1,5 @@
+#![doc = include_str!("../README.md")]
+
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 use clap::{crate_version, AppSettings, FromArgMatches, IntoApp};
