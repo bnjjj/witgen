@@ -5,9 +5,9 @@
 [![Version](https://img.shields.io/crates/v/witgen.svg)](https://crates.io/crates/witgen)
 [![Docs.rs](https://docs.rs/witgen/badge.svg)](https://docs.rs/witgen)
 
-> witgen is a library to help you generate wit definitions in a wit file for WebAssembly
+witgen is a library to help you generate [wit definitions](https://github.com/bytecodealliance/wit-bindgen/blob/main/WIT.md) in a wit file for WebAssembly. Using this lib in addition to [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen) will help you to import/export types and functions from/to wasm module.
 
-# Getting started
+## Getting started
 
 - Put this dependency in your `Cargo.toml`
 
@@ -29,8 +29,20 @@ $ cargo install cargo-witgen
 use witgen::witgen;
 
 #[witgen]
-fn test(other: Vec<u8>, number: u8, othernum: i32) -> (String, i64) {
-    (String::from("test"), 0i64)
+struct TestStruct {
+    inner: String,
+}
+
+#[witgen]
+enum TestEnum {
+    Unit,
+    Number(u64),
+    String(String),
+}
+
+#[witgen]
+fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result<(String, i64), String> {
+    Ok((String::from("test"), 0i64))
 }
 ```
 
@@ -42,8 +54,18 @@ $ cargo witgen generate
 
 - It will generate a `witgen.wit` file at the root of your package:
 
-```
-test : function(other: list <u8>, number: u8, othernum: s32) -> (string, s64)
+```wit
+record TestStruct {
+    inner: string
+}
+
+variant TestEnum {
+    Unit,
+	Number(u64),
+	String(string),
+}
+
+test : function(other: list <u8>, test_struct: TestStruct, other_enum: TestEnum) -> expected<tuple<string, s64>>
 ```
 
 ## Roadmap:

@@ -141,6 +141,15 @@ pub(crate) fn gen_wit_function(target_dir: &Path, func: &ItemFn) -> Result<()> {
     Ok(())
 }
 
-pub(crate) fn gen_wit_type_alias(target_dir: &Path, type_alias: &ItemType) {
-    todo!()
+pub(crate) fn gen_wit_type_alias(target_dir: &Path, type_alias: &ItemType) -> Result<()> {
+    if !type_alias.generics.params.is_empty() {
+        bail!("doesn't support generic parameters with witgen");
+    }
+    let ty = type_alias.ty.to_wit()?;
+
+    let content = format!("type {} = {}", type_alias.ident, ty);
+
+    write_to_file(target_dir, content)?;
+
+    Ok(())
 }

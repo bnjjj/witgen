@@ -1,3 +1,5 @@
+#![doc = include_str!("../../../README.md")]
+
 use std::{
     fs::{self, OpenOptions},
     io::Write,
@@ -10,7 +12,9 @@ use once_cell::sync::OnceCell;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
 use quote::ToTokens;
-use syn::{parse, ItemEnum, ItemFn, ItemStruct, Type};
+use syn::{parse, ItemEnum, ItemFn, ItemStruct, ItemType, Type};
+
+use crate::generator::gen_wit_type_alias;
 
 mod generator;
 
@@ -26,6 +30,27 @@ macro_rules! handle_error {
     };
 }
 
+/// Proc macro attribute to help cargo-witgen to generate right definitions in `.wit` file
+/// ```no_run
+/// use witgen::witgen;
+///
+/// #[witgen]
+/// struct TestStruct {
+///     inner: String,
+/// }
+///
+/// #[witgen]
+/// enum TestEnum {
+///     Unit,
+///     Number(u64),
+///     String(String),
+/// }
+///
+/// #[witgen]
+/// fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result<(String, i64), String> {
+///     Ok((String::from("test"), 0i64))
+/// }
+/// ```
 #[proc_macro_attribute]
 pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let target_dir = TARGET_PATH.get_or_init(get_target_dir);
@@ -48,6 +73,12 @@ pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let enm = parse::<ItemEnum>(item.clone());
     if let Ok(enm) = &enm {
         handle_error!(gen_wit_enum(target_dir, enm));
+        return item;
+    }
+
+    let type_alias = parse::<ItemType>(item.clone());
+    if let Ok(type_alias) = &type_alias {
+        handle_error!(gen_wit_type_alias(target_dir, type_alias));
         return item;
     }
     // TODO add type alias
