@@ -1,6 +1,25 @@
 # witgen
 
-witgen is a library to help you generate wit definitions in a wit file for WebAssembly
+![Rust](https://img.shields.io/badge/rust-stable-brightgreen.svg)
+![Rust](https://github.com/bnjjj/witgen/workflows/Rust/badge.svg)
+[![Version](https://img.shields.io/crates/v/witgen.svg)](https://crates.io/crates/witgen)
+[![Docs.rs](https://docs.rs/witgen/badge.svg)](https://docs.rs/witgen)
+
+> witgen is a library to help you generate wit definitions in a wit file for WebAssembly
+
+# Getting started
+
+- Put this dependency in your `Cargo.toml`
+
+```toml
+witgen = "0.1"
+```
+
+- Install `cargo witgen` CLI
+
+```bash
+$ cargo install cargo-witgen
+```
 
 ## Examples
 
@@ -17,7 +36,7 @@ fn test(other: Vec<u8>, number: u8, othernum: i32) -> (String, i64) {
 
 - Then you can launch (at the root of your package):
 
-```
+```bash
 $ cargo witgen generate
 ```
 
