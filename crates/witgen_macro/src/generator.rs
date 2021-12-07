@@ -62,6 +62,40 @@ pub(crate) fn gen_wit_struct(target_dir: &Path, strukt: &ItemStruct) -> Result<(
 }
 
 pub(crate) fn gen_wit_enum(target_dir: &Path, enm: &ItemEnum) -> Result<()> {
+    if !enm.generics.params.is_empty() {
+        bail!("doesn't support generic parameters with witgen");
+    }
+
+    let enm_name = &enm.ident;
+    let variants = enm
+        .variants
+        .iter()
+        .map(|variant| match &variant.fields {
+            syn::Fields::Named(_named) => Err(anyhow::anyhow!(
+                "named variant fields are not already supported"
+            )),
+            syn::Fields::Unnamed(unamed) => {
+                let fields = unamed
+                    .unnamed
+                    .iter()
+                    .map(|field| field.ty.to_wit())
+                    .collect::<Result<Vec<String>>>()?
+                    .join(", ");
+                Ok(format!("{}({}),", variant.ident.to_string(), fields))
+            }
+            syn::Fields::Unit => Ok(variant.ident.to_string() + ","),
+        })
+        .collect::<Result<Vec<String>>>()?
+        .join("\n\t");
+    let content = format!(
+        r#"variant {} {{
+    {}
+}}"#,
+        enm_name, variants
+    );
+
+    write_to_file(target_dir, content)?;
+
     Ok(())
 }
 

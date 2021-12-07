@@ -50,12 +50,11 @@ pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
         handle_error!(gen_wit_enum(target_dir, enm));
         return item;
     }
-
-    // TODO add enum
+    // TODO add type alias
 
     syn::Error::new_spanned(
         proc_macro2::TokenStream::from(item),
-        "Cannot put wit_generator proc macro on this kind of element",
+        "Cannot put wit_generator proc macro on this kind of item",
     )
     .to_compile_error()
     .into()
@@ -102,6 +101,29 @@ impl ToWitType for Type {
                                     bail!("generic args type {:?} is not implemented", other)
                                 }
                             }
+                        }
+                        syn::PathArguments::Parenthesized(_) | syn::PathArguments::None => {
+                            bail!("parenthized path argument is not implemented")
+                        }
+                    },
+                    wrapper_ty @ "Result" => match &last_path_seg.arguments {
+                        syn::PathArguments::AngleBracketed(generic_args) => {
+                            if generic_args.args.len() > 2 {
+                                bail!("generic args of {} should not be more than 2", wrapper_ty);
+                            }
+                            let generic_args = generic_args
+                                .args
+                                .iter()
+                                .map(|t| match t {
+                                    syn::GenericArgument::Type(ty) => ty.to_wit(),
+                                    other => Err(anyhow::anyhow!(
+                                        "generic args type {:?} is not implemented",
+                                        other
+                                    )),
+                                })
+                                .collect::<Result<Vec<String>>>()?;
+
+                            format!("expected <{}>", generic_args.join(", "))
                         }
                         syn::PathArguments::Parenthesized(_) | syn::PathArguments::None => {
                             bail!("parenthized path argument is not implemented")
