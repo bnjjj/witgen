@@ -1,3 +1,4 @@
+#![deny(warnings)]
 use std::{
     fs::{self, OpenOptions},
     io::Write,
@@ -20,10 +21,23 @@ static TARGET_PATH: OnceCell<PathBuf> = OnceCell::new();
 
 macro_rules! handle_error {
     ($op: expr) => {
-        if let Err(err) = $op {
-            return syn::Error::new(Span::call_site(), format!("witgen error: {}", err))
-                .to_compile_error()
-                .into();
+        let content = match $op {
+            Ok(res) => res,
+            Err(err) => {
+                return syn::Error::new(Span::call_site(), format!("witgen error: {}", err))
+                    .to_compile_error()
+                    .into();
+            }
+        };
+
+        if let Err(err) = write_to_file(TARGET_PATH.get().expect("cannot get target path"), content)
+        {
+            return syn::Error::new(
+                Span::call_site(),
+                format!("witgen error: cannot write to file ({})", err),
+            )
+            .to_compile_error()
+            .into();
         };
     };
 }
@@ -58,28 +72,27 @@ pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let strukt = parse::<ItemStruct>(item.clone());
     if let Ok(strukt) = &strukt {
-        handle_error!(gen_wit_struct(target_dir, strukt));
+        handle_error!(gen_wit_struct(strukt));
         return item;
     }
 
     let func = parse::<ItemFn>(item.clone());
     if let Ok(func) = &func {
-        handle_error!(gen_wit_function(target_dir, func));
+        handle_error!(gen_wit_function(func));
         return item;
     }
 
     let enm = parse::<ItemEnum>(item.clone());
     if let Ok(enm) = &enm {
-        handle_error!(gen_wit_enum(target_dir, enm));
+        handle_error!(gen_wit_enum(enm));
         return item;
     }
 
     let type_alias = parse::<ItemType>(item.clone());
     if let Ok(type_alias) = &type_alias {
-        handle_error!(gen_wit_type_alias(target_dir, type_alias));
+        handle_error!(gen_wit_type_alias(type_alias));
         return item;
     }
-    // TODO add type alias
 
     syn::Error::new_spanned(
         proc_macro2::TokenStream::from(item),

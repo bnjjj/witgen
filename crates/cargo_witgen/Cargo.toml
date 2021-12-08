@@ -1,6 +1,6 @@
 [package]
 name = "cargo-witgen"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "witgen is a library to help you generate wit definitions in a wit file for WebAssembly and this binary will generate wit file"
@@ -8,6 +8,7 @@ license-file = "LICENSE"
 readme = "README.md"
 repository = "https://github.com/bnjjj/witgen"
 homepage = "https://github.com/bnjjj/witgen"
+documentation = "https://docs.rs/witgen"
 keywords = ["webassembly", "generate", "cargo", "wasm"]
 categories = ["command-line-interface", "command-line-interface", "wasm"]
 

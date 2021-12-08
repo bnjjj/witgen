@@ -1,3 +1,4 @@
+#![deny(warnings)]
 #![doc = include_str!("../README.md")]
 
 use anyhow::{bail, Context, Result};
@@ -82,6 +83,8 @@ hint: This command only works in the manifest directory of a Cargo package."#
         .open(filename)
         .expect("cannot create file to generate wit");
 
+    file.write_all(b"// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command\n\n").context("cannot write to wit file")?;
+
     for path in glob::glob(
         pattern
             .to_str()
@@ -92,12 +95,12 @@ hint: This command only works in the manifest directory of a Cargo package."#
         content.push(b'\n');
 
         file.write_all(&content[..])
-            .expect("cannot write to wit file");
+            .context("cannot write to wit file")?;
 
         // We don't care too much if we can't remove it
         let _ = fs::remove_file(&path);
     }
-    file.flush().expect("cannot flush wit file");
+    file.flush().context("cannot flush wit file")?;
 
     Ok(())
 }

@@ -1,13 +1,10 @@
-use std::{
-    fmt::Write,
-    path::{Path, PathBuf},
-};
+use std::{fmt::Write, path::PathBuf};
 
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 use syn::{ItemEnum, ItemFn, ItemStruct, ItemType, ReturnType, Type};
 
-use crate::{write_to_file, ToWitType};
+use crate::ToWitType;
 
 pub(crate) fn get_target_dir() -> PathBuf {
     let metadata = MetadataCommand::new()
@@ -17,7 +14,7 @@ pub(crate) fn get_target_dir() -> PathBuf {
     metadata.target_directory.join("witgen").into()
 }
 
-pub(crate) fn gen_wit_struct(target_dir: &Path, strukt: &ItemStruct) -> Result<()> {
+pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     if !strukt.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -46,22 +43,21 @@ pub(crate) fn gen_wit_struct(target_dir: &Path, strukt: &ItemStruct) -> Result<(
     };
 
     let content = if is_tuple_struct {
-        format!("type {} = tuple<{}>", struct_name, attrs)
+        format!("type {} = tuple<{}>\n", struct_name, attrs)
     } else {
         format!(
             r#"record {} {{
     {}
-}}"#,
+}}
+"#,
             struct_name, attrs
         )
     };
 
-    write_to_file(target_dir, content)?;
-
-    Ok(())
+    Ok(content)
 }
 
-pub(crate) fn gen_wit_enum(target_dir: &Path, enm: &ItemEnum) -> Result<()> {
+pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     if !enm.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -90,19 +86,18 @@ pub(crate) fn gen_wit_enum(target_dir: &Path, enm: &ItemEnum) -> Result<()> {
     let content = format!(
         r#"variant {} {{
     {}
-}}"#,
+}}
+"#,
         enm_name, variants
     );
 
-    write_to_file(target_dir, content)?;
-
-    Ok(())
+    Ok(content)
 }
 
-pub(crate) fn gen_wit_function(target_dir: &Path, func: &ItemFn) -> Result<()> {
+pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
     let mut content = String::new();
-    write!(&mut content, "{} : function(", func.sig.ident.to_string())
+    write!(&mut content, "{}: function(", func.sig.ident.to_string())
         .context("cannot write function declaration in wit")?;
     let fn_args: Vec<String> = signature
         .inputs
@@ -136,20 +131,16 @@ pub(crate) fn gen_wit_function(target_dir: &Path, func: &ItemFn) -> Result<()> {
         }
     }
 
-    write_to_file(target_dir, content)?;
-
-    Ok(())
+    Ok(content)
 }
 
-pub(crate) fn gen_wit_type_alias(target_dir: &Path, type_alias: &ItemType) -> Result<()> {
+pub(crate) fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     if !type_alias.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
     let ty = type_alias.ty.to_wit()?;
 
-    let content = format!("type {} = {}", type_alias.ident, ty);
+    let content = format!("type {} = {}\n", type_alias.ident, ty);
 
-    write_to_file(target_dir, content)?;
-
-    Ok(())
+    Ok(content)
 }

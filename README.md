@@ -12,7 +12,7 @@ witgen is a library to help you generate [wit definitions](https://github.com/by
 - Put this dependency in your `Cargo.toml`
 
 ```toml
-witgen = "0.2"
+witgen = "0.3"
 ```
 
 - Install `cargo witgen` CLI
