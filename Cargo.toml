@@ -18,4 +18,4 @@ categories = ["wasm", "development-tools", "encoding"]
 witgen_macro = { path = "crates/witgen_macro", version = "0.3" }
 
 [workspace]
-members = ["crates/witgen_macro", "crates/cargo_witgen"]
+members = ["crates/witgen_macro", "crates/cargo_witgen", "examples/my_witgen_example"]
