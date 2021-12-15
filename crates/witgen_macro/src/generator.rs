@@ -77,7 +77,11 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                     .map(|field| field.ty.to_wit())
                     .collect::<Result<Vec<String>>>()?
                     .join(", ");
-                Ok(format!("{}({}),", variant.ident.to_string(), fields))
+                if unamed.unnamed.len() > 1 {
+                    Ok(format!("{}(tuple<{}>),", variant.ident.to_string(), fields))
+                } else {
+                    Ok(format!("{}({}),", variant.ident.to_string(), fields))
+                }
             }
             syn::Fields::Unit => Ok(variant.ident.to_string() + ","),
         })
