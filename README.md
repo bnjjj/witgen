@@ -9,7 +9,7 @@ witgen is a library and a CLI that helps you generate [wit definitions](https://
 
 ## Getting started
 
-*Goal:* Generate a `.wit` file writting only Rust.
+*Goal:* Generate a `.wit` file writing only Rust.
 
 You will need both the library and the CLI. 
 
