@@ -2,7 +2,7 @@ use std::{fmt::Write, path::PathBuf};
 
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
-use syn::{ItemEnum, ItemFn, ItemStruct, ItemType, ReturnType, Type};
+use syn::{Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
 
 use crate::ToWitType;
 
@@ -21,6 +21,7 @@ pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
 
     let struct_name = &strukt.ident;
     let mut is_tuple_struct = false;
+    let comment = get_doc_comment(&strukt.attrs)?;
     let attrs = strukt
         .fields
         .iter()
@@ -32,8 +33,13 @@ pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
                     String::new()
                 }
             };
+            let comment = get_doc_comment(&field.attrs)?;
 
-            Ok(format!("{}{}", field_name, field.ty.to_wit()?))
+            let field_wit = format!("{}{}", field_name, field.ty.to_wit()?);
+            match comment {
+                Some(comment) => Ok(format!("{}\t{}", comment, field_wit)),
+                None => Ok(field_wit),
+            }
         })
         .collect::<Result<Vec<String>>>()?;
     let attrs = if is_tuple_struct {
@@ -54,7 +60,10 @@ pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         )
     };
 
-    Ok(content)
+    match comment {
+        Some(comment) => Ok(format!("{}{}", comment, content)),
+        None => Ok(content),
+    }
 }
 
 pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
@@ -63,6 +72,7 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     }
 
     let enm_name = &enm.ident;
+    let comment = get_doc_comment(&enm.attrs)?;
     let variants = enm
         .variants
         .iter()
@@ -71,19 +81,33 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 "named variant fields are not already supported"
             )),
             syn::Fields::Unnamed(unamed) => {
+                let comment = get_doc_comment(&variant.attrs)?;
                 let fields = unamed
                     .unnamed
                     .iter()
                     .map(|field| field.ty.to_wit())
                     .collect::<Result<Vec<String>>>()?
                     .join(", ");
-                if unamed.unnamed.len() > 1 {
-                    Ok(format!("{}(tuple<{}>),", variant.ident.to_string(), fields))
+                let variant_wit = if unamed.unnamed.len() > 1 {
+                    format!("{}(tuple<{}>),", variant.ident.to_string(), fields)
                 } else {
-                    Ok(format!("{}({}),", variant.ident.to_string(), fields))
+                    format!("{}({}),", variant.ident.to_string(), fields)
+                };
+
+                match comment {
+                    Some(comment) => Ok(format!("{}\t{}", comment, variant_wit)),
+                    None => Ok(variant_wit),
                 }
             }
-            syn::Fields::Unit => Ok(variant.ident.to_string() + ","),
+            syn::Fields::Unit => {
+                let comment = get_doc_comment(&variant.attrs)?;
+                let variant_wit = variant.ident.to_string() + ",";
+
+                match comment {
+                    Some(comment) => Ok(format!("{}\t{}", comment, variant_wit)),
+                    None => Ok(variant_wit),
+                }
+            }
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n\t");
@@ -95,11 +119,15 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         enm_name, variants
     );
 
-    Ok(content)
+    match comment {
+        Some(comment) => Ok(format!("{}{}", comment, content)),
+        None => Ok(content),
+    }
 }
 
 pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
+    let comment = get_doc_comment(&func.attrs)?;
     let mut content = String::new();
     write!(&mut content, "{}: function(", func.sig.ident.to_string())
         .context("cannot write function declaration in wit")?;
@@ -135,16 +163,40 @@ pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
         }
     }
 
-    Ok(content)
+    match comment {
+        Some(comment) => Ok(format!("{}{}", comment, content)),
+        None => Ok(content),
+    }
 }
 
 pub(crate) fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     if !type_alias.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
+    let comment = get_doc_comment(&type_alias.attrs)?;
     let ty = type_alias.ty.to_wit()?;
 
     let content = format!("type {} = {}\n", type_alias.ident, ty);
 
-    Ok(content)
+    match comment {
+        Some(comment) => Ok(format!("{}{}", comment, content)),
+        None => Ok(content),
+    }
+}
+
+fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
+    let mut comment = String::new();
+
+    for attr in attrs {
+        match &attr.parse_meta()? {
+            syn::Meta::NameValue(name_val) if name_val.path.is_ident("doc") => {
+                if let Lit::Str(lit_str) = &name_val.lit {
+                    writeln!(&mut comment, "/// {}", lit_str.value())?;
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok((!comment.is_empty()).then(|| comment))
 }

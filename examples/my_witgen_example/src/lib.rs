@@ -33,23 +33,30 @@ fn test_result(other: Vec<u8>, number: u8, othernum: i32) -> Result<(String, usi
 }
 
 #[witgen]
+/// Here is a doc example to generate in wit file
 struct TestBis {
     coucou: String,
     btes: Vec<u8>,
 }
 
 #[witgen]
+/// Documentation over struct
+/// in multi-line
 struct TestTuple(usize, String);
 
 #[witgen]
 struct TestStruct {
+    /// Doc comment over inner field in struct
     inner: String,
 }
 
+/// Documentation over enum
 #[witgen]
 enum TestEnum {
+    /// Doc comment over Unit variant in struct
     Unit,
     Number(u64),
+    /// Doc comment over String variant in struct
     String(String),
 }
 

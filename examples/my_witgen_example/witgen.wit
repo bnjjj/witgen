@@ -2,34 +2,41 @@
 
 test_tuple: function(other: list <u8>, test_struct: TestStruct, other_enum: TestEnum) -> (string, s64)
 
-record TestBis {
-    coucou: string,
-	btes: list <u8>
-}
-
 variant MyEnum {
     Unit,
 	Tuple(tuple<string, s32>),
 }
 
-record TestStruct {
-    inner: string
-}
-
 test_result: function(other: list <u8>, number: u8, othernum: s32) -> expected <tuple<string, u64>, string>
+
+///  Here is a doc example to generate in wit file
+record TestBis {
+    coucou: string,
+	btes: list <u8>
+}
 
 test_simple: function(array: list <u8>) -> string
 
 test_option: function(other: list <u8>, number: u8, othernum: s32) -> option <tuple<string, u64>>
 
-test_array: function(other: list <u8>, number: u8, othernum: s32) -> (string, u64)
+///  Documentation over enum
+variant TestEnum {
+    ///  Doc comment over Unit variant in struct
+	Unit,
+	Number(u64),
+	///  Doc comment over String variant in struct
+	String(string),
+}
 
+///  Documentation over struct
+///  in multi-line
 type TestTuple = tuple<u64, string>
 
-variant TestEnum {
-    Unit,
-	Number(u64),
-	String(string),
+test_array: function(other: list <u8>, number: u8, othernum: s32) -> (string, u64)
+
+record TestStruct {
+    ///  Doc comment over inner field in struct
+	inner: string
 }
 
 test_vec: function(other: list <u8>, number: u8, othernum: s32) -> (string, u64)
