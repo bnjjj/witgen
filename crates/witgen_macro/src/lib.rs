@@ -7,6 +7,7 @@ use std::{
 
 use anyhow::{bail, Context, Result};
 use generator::{gen_wit_enum, gen_wit_function, gen_wit_struct, get_target_dir};
+use heck::ToKebabCase;
 use once_cell::sync::OnceCell;
 use proc_macro::TokenStream;
 use proc_macro2::Span;
@@ -182,7 +183,16 @@ impl ToWitType for Type {
                             }
                             "usize" => String::from("u64"),
                             "isize" => String::from("i64"),
-                            ident => ident.to_string(),
+                            ident
+                            @
+                            ("f32" | "f64" | "u8" | "u16" | "u32" | "u64" | "char"
+                            | "bool") => ident.to_string(),
+                            ident => {
+                                let ident_formatted = ident.to_string().to_kebab_case();
+                                is_known_keyword(&ident_formatted)?;
+
+                                ident_formatted
+                            }
                         }
                     }
                 }
@@ -232,4 +242,50 @@ pub(crate) fn write_to_file(target_dir: &Path, content: String) -> Result<()> {
     file.flush().context("cannot flush wit file")?;
 
     Ok(())
+}
+
+fn is_known_keyword(ident: &str) -> Result<()> {
+    if matches!(
+        ident,
+        "use"
+            | "type"
+            | "resource"
+            | "function"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "s8"
+            | "s16"
+            | "s32"
+            | "s64"
+            | "f32"
+            | "f64"
+            | "char"
+            | "handle"
+            | "record"
+            | "enum"
+            | "flags"
+            | "variant"
+            | "union"
+            | "bool"
+            | "string"
+            | "option"
+            | "list"
+            | "expected"
+            | "_"
+            | "as"
+            | "from"
+            | "static"
+            | "interface"
+            | "tuple"
+            | "async"
+    ) {
+        Err(anyhow::anyhow!(
+            "'{}' is a known keyword you can't use the same identifier",
+            ident
+        ))
+    } else {
+        Ok(())
+    }
 }

@@ -4,7 +4,7 @@ use witgen::witgen;
 #[witgen]
 enum MyEnum {
     Unit,
-    Tuple(String, i32),
+    TupleVariant(String, i32),
 }
 
 #[witgen]
@@ -57,7 +57,7 @@ enum TestEnum {
     Unit,
     Number(u64),
     /// Doc comment over String variant in struct
-    String(String),
+    StringVariant(String),
 }
 
 #[witgen]

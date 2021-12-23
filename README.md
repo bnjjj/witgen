@@ -9,9 +9,9 @@ witgen is a library and a CLI that helps you generate [wit definitions](https://
 
 ## Getting started
 
-*Goal:* Generate a `.wit` file writing only Rust.
+_Goal:_ Generate a `.wit` file writing only Rust.
 
-You will need both the library and the CLI. 
+You will need both the library and the CLI.
 
 ### Preliminaries
 
@@ -21,7 +21,6 @@ You will need both the library and the CLI.
 $ cargo new my_wit
 $ cd my_wit
 ```
-
 
 - Add `witgen` as a dependency in your `Cargo.toml`.
 
@@ -51,14 +50,14 @@ struct TestStruct {
 enum TestEnum {
     Unit,
     Number(u64),
-    String(String),
+    StringVariant(String),
 }
 
 #[witgen]
 fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result<(String, i64), String> {
     // The following code is not part of the generated `.wit` file.
     // You may add an example implementation or just satisfy the compiler with a `todo!()`.
-    Ok((String::from("test"), 0i64)) 
+    Ok((String::from("test"), 0i64))
 }
 ```
 
@@ -71,17 +70,17 @@ $ cargo witgen generate
 - It will generate a `witgen.wit` file at the root of your package:
 
 ```wit
-record TestStruct {
+record test-struct {
     inner: string
 }
 
-variant TestEnum {
-    Unit,
-	Number(u64),
-	String(string),
+variant test-enum {
+    unit,
+	number(u64),
+	string-variant(string),
 }
 
-test : function(other: list <u8>, test_struct: TestStruct, other_enum: TestEnum) -> expected<tuple<string, s64>>
+test : function(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> expected<tuple<string, s64>>
 ```
 
 - You can find more complete examples [here](./examples)
