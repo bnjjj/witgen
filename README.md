@@ -22,7 +22,7 @@ $ cargo new my_wit
 $ cd my_wit
 ```
 
-- Add `witgen` as a dependency in your `Cargo.toml`.
+- Add `witgen` as a dependency in your `Cargo.toml`. Note: must have `cargo-edit` installed to add dependencies from CLI, e.g. `cargo install cargo-edit`.
 
 ```bash
 $ cargo add witgen
