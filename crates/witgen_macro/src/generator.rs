@@ -4,7 +4,7 @@ use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 use syn::{Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
 
-use crate::{is_known_keyword, options::style_ident, ToWitType};
+use crate::{is_known_keyword, options::{style_ident, style_type}, ToWitType};
 
 pub(crate) fn get_target_dir() -> PathBuf {
     let metadata = MetadataCommand::new()
@@ -155,7 +155,7 @@ pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
                 };
                 is_known_keyword(&pat)?;
 
-                let ty = typed_pat.ty.to_wit()?;
+                let ty = style_type(&typed_pat.ty.to_wit()?);
                 Ok(format!("{}: {}", pat, ty))
             }
         })
@@ -172,7 +172,7 @@ pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
                 .join(", ");
             writeln!(&mut content, " -> ({})", tuple_fields).context("cannot write return type")?;
         } else {
-            writeln!(&mut content, " -> {}", return_ty.to_wit()?)
+            writeln!(&mut content, " -> {}", style_type(&return_ty.to_wit()?))
                 .context("cannot write return type")?;
         }
     }

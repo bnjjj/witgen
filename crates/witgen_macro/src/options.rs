@@ -1,6 +1,8 @@
 use heck::{ToKebabCase, ToLowerCamelCase, ToSnekCase, ToUpperCamelCase};
 use proc_macro2::Ident;
 
+use crate::is_known_keyword;
+
 const IDENT_STYLE: &str = "IDENT_STYLE";
 const TYPE_STYLE: &str = "TYPE_STYLE";
 
@@ -52,5 +54,22 @@ pub(crate) fn get_type_style_env() -> String {
 }
 
 pub fn style_ident(ident: &Ident, is_type: bool) -> String {
-    StringCase::format_str(ident.to_string(), is_type)
+    let ident = ident.to_string();
+    if is_type && is_wit_primitive(&ident) {
+        ident
+    } else {
+        StringCase::format_str(ident, is_type)
+    }
+}
+
+fn is_wit_primitive(ident: &str) -> bool {
+  is_known_keyword(&ident).is_err() || ident.contains("<")
+}
+
+pub fn style_type(ident: &str) -> String {
+    if is_wit_primitive(ident) {
+      ident.to_string()
+    } else {
+      StringCase::format_str(ident.to_string(), true)
+    }
 }
