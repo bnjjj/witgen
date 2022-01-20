@@ -111,10 +111,10 @@ impl ToWitType for Type {
     fn to_wit(&self) -> Result<String> {
         let res = match self {
             Type::Array(array) => {
-                format!("list <{}>", array.elem.to_wit()?)
+                format!("list<{}>", array.elem.to_wit()?)
             }
             Type::Slice(array) => {
-                format!("list <{}>", array.elem.to_wit()?)
+                format!("list<{}>", array.elem.to_wit()?)
             }
             Type::Path(path) => {
                 let last_path_seg = path.path.segments.last().ok_or_else(|| {
@@ -138,7 +138,7 @@ impl ToWitType for Type {
                                         "Option" => "option",
                                         _ => unreachable!(),
                                     };
-                                    format!("{} <{}>", new_ty_name, ty.to_wit()?)
+                                    format!("{}<{}>", new_ty_name, ty.to_wit()?)
                                 }
                                 other => {
                                     bail!("generic args type {:?} is not implemented", other)
@@ -166,7 +166,7 @@ impl ToWitType for Type {
                                 })
                                 .collect::<Result<Vec<String>>>()?;
 
-                            format!("expected <{}>", generic_args.join(", "))
+                            format!("expected<{}>", generic_args.join(", "))
                         }
                         syn::PathArguments::Parenthesized(_) | syn::PathArguments::None => {
                             bail!("parenthized path argument is not implemented")
