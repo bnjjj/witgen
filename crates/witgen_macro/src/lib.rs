@@ -17,6 +17,7 @@ use syn::{parse, ItemEnum, ItemFn, ItemStruct, ItemType, Type};
 use crate::generator::gen_wit_type_alias;
 
 mod generator;
+mod options;
 
 static TARGET_PATH: OnceCell<PathBuf> = OnceCell::new();
 
@@ -183,9 +184,7 @@ impl ToWitType for Type {
                             }
                             "usize" => String::from("u64"),
                             "isize" => String::from("i64"),
-                            ident
-                            @
-                            ("f32" | "f64" | "u8" | "u16" | "u32" | "u64" | "char"
+                            ident @ ("f32" | "f64" | "u8" | "u16" | "u32" | "u64" | "char"
                             | "bool") => ident.to_string(),
                             ident => {
                                 let ident_formatted = ident.to_string().to_kebab_case();

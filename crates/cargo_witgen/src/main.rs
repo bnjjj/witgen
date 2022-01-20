@@ -34,21 +34,21 @@ fn main() -> Result<()> {
     let matches =
         Opt::from_arg_matches(&matches).ok_or_else(|| anyhow::anyhow!("Command not found"))?;
 
-    match matches.command {
-        opt::Command::Generate { output, args } => {
-            run_generate(target_dir, output, args)?;
-        }
-    }
-
-    Ok(())
+    run_generate(target_dir, matches.command)
 }
 
-fn run_generate(target_dir: &Path, output: Option<PathBuf>, cargo_args: Vec<String>) -> Result<()> {
+fn run_generate(target_dir: &Path, cli_args: crate::opt::Command) -> Result<()> {
     anyhow::ensure!(
         Path::new("Cargo.toml").exists(),
         r#"Failed to read `Cargo.toml`.
-hint: This command only works in the manifest directory of a Cargo package."#
+    hint: This command only works in the manifest directory of a Cargo package."#
     );
+    let crate::opt::Command::Generate {
+        args,
+        output,
+        idents,
+        types,
+    } = cli_args;
 
     // path to the Cargo executable
     let cargo = env::var("CARGO")
@@ -56,7 +56,7 @@ hint: This command only works in the manifest directory of a Cargo package."#
 
     let check_status = Command::new(&cargo)
         .arg("rustc")
-        .args(cargo_args)
+        .args(args)
         .arg("--")
         .arg("--emit")
         .arg("dep-info,metadata")
@@ -67,6 +67,14 @@ hint: This command only works in the manifest directory of a Cargo package."#
             SystemTime::UNIX_EPOCH.elapsed()?.as_millis()
         ))
         .env("WITGEN_ENABLED", "true")
+        .env(
+            "IDENT_STYLE",
+            idents.as_ref().map(|i| i.as_str()).unwrap_or("KEBAB_CASE"),
+        )
+        .env(
+            "TYPE_STYLE",
+            types.as_ref().map(|i| i.as_str()).unwrap_or("KEBAB_CASE"),
+        )
         .status()?;
 
     if !check_status.success() {
