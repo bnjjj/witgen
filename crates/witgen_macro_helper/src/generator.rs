@@ -7,7 +7,7 @@ use syn::{Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Ty
 
 use crate::{is_known_keyword, ToWitType};
 
-pub(crate) fn get_target_dir() -> PathBuf {
+pub fn get_target_dir() -> PathBuf {
     let metadata = MetadataCommand::new()
         .exec()
         .expect("cannot fetch cargo metadata");
@@ -15,7 +15,7 @@ pub(crate) fn get_target_dir() -> PathBuf {
     metadata.target_directory.join("witgen").into()
 }
 
-pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
+pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     if !strukt.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -71,7 +71,7 @@ pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
+pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     if !enm.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -135,7 +135,7 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
+pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
     let comment = get_doc_comment(&func.attrs)?;
     let func_name_fmt = func.sig.ident.to_string().to_kebab_case();
@@ -184,7 +184,7 @@ pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
+pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     if !type_alias.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }

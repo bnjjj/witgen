@@ -1,5 +1,5 @@
 [package]
-name = "witgen_macro"
+name = "witgen_macro_helper"
 version = "0.5.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
@@ -14,11 +14,12 @@ keywords = ["webassembly", "generate", "cargo", "wasm"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-witgen_macro_helper = {path = "../witgen_macro_helper"}
 anyhow = "1.0.51"
+cargo_metadata = "0.14.1"
+heck = "0.4.0"
+hex = "0.4.3"
 once_cell = "1.8.0"
 proc-macro2 = { version = "1.0.32", features = ["span-locations"] }
+quote = "1.0.10"
+sha2 = "0.9.8"
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
-
-[lib]
-proc-macro = true
