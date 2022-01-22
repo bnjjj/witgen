@@ -82,8 +82,9 @@ hint: This command only works in the manifest directory of a Cargo package."#
         .create(true)
         .open(filename)
         .expect("cannot create file to generate wit");
-
-    file.write_all(b"// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command\n\n").context("cannot write to wit file")?;
+    let generated_comment = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+    file.write_all(generated_comment.as_bytes())
+        .context("cannot write to wit file")?;
 
     for path in glob::glob(
         pattern

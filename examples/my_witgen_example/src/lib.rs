@@ -13,6 +13,15 @@ fn test_simple(array: Vec<u8>) -> String {
 }
 
 #[witgen]
+type NFTContractMetadata = String;
+
+#[witgen]
+pub struct InitArgs {
+    owner_id: String,
+    metadata: NFTContractMetadata,
+}
+
+#[witgen]
 fn test_array(other: [u8; 32], number: u8, othernum: i32) -> (String, usize) {
     (String::from("test"), 0usize)
 }
