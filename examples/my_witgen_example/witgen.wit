@@ -1,8 +1,16 @@
-// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.5.0) 
+// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.6.0) 
 
-test-option: function(other: list <u8>, number: u8, othernum: s32) -> option <tuple<string, u64>>
+///  Here is a doc example to generate in wit file
+record test-bis {
+    coucou: string,
+	btes: list<u8>
+}
 
-test-simple: function(array: list <u8>) -> string
+test-simple: function(array: list<u8>) -> string
+
+test-tuple: function(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> (string, s64)
+
+test-result: function(other: list<u8>, number: u8, othernum: s32) -> expected<tuple<string, u64>, string>
 
 record init-args {
     owner-id: string,
@@ -13,11 +21,7 @@ record init-args {
 ///  in multi-line
 type test-tuple = tuple<u64, string>
 
-test-array: function(other: list <u8>, number: u8, othernum: s32) -> (string, u64)
-
-test-vec: function(other: list <u8>, number: u8, othernum: s32) -> (string, u64)
-
-test-tuple: function(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> (string, s64)
+test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
 
 variant my-enum {
     unit,
@@ -31,6 +35,8 @@ record test-struct {
 
 type nft-contract-metadata = string
 
+test-array: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
+
 ///  Documentation over enum
 variant test-enum {
     ///  Doc comment over Unit variant in struct
@@ -40,11 +46,5 @@ variant test-enum {
 	string-variant(string),
 }
 
-test-result: function(other: list <u8>, number: u8, othernum: s32) -> expected <tuple<string, u64>, string>
-
-///  Here is a doc example to generate in wit file
-record test-bis {
-    coucou: string,
-	btes: list <u8>
-}
+test-vec: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
 
