@@ -44,7 +44,8 @@ macro_rules! handle_error {
     };
 }
 
-pub fn set_target_dir() -> PathBuf {
+#[doc(hidden)]
+pub fn get_or_init_target_dir() -> PathBuf {
     if let Some(target_dir) = TARGET_PATH.get() {
         return target_dir.to_path_buf();
     }
