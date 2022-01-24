@@ -31,7 +31,7 @@ macro_rules! handle_error {
                     .into();
             }
         };
-        let target_dir = witgen_macro_helper::set_target_dir();
+        let target_dir = witgen_macro_helper::get_or_init_target_dir();
 
         if let Err(err) = witgen_macro_helper::write_to_file(&target_dir, content) {
             return syn::Error::new(
