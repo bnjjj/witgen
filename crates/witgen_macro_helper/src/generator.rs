@@ -7,7 +7,7 @@ use syn::{Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Ty
 
 use crate::{is_known_keyword, ToWitType};
 
-pub(crate) fn get_target_dir() -> PathBuf {
+pub fn get_target_dir() -> PathBuf {
     let metadata = MetadataCommand::new()
         .exec()
         .expect("cannot fetch cargo metadata");
@@ -15,7 +15,26 @@ pub(crate) fn get_target_dir() -> PathBuf {
     metadata.target_directory.join("witgen").into()
 }
 
-pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
+
+/// Generate a wit record
+/// ```rust
+/// /// Document String
+/// struct FooRecord {
+///    a: string,
+///    /// Comment field
+///    b: Option<i32>,
+/// }
+/// ```
+/// becomes
+/// ```ts
+/// /// Document String
+/// record foo-record {
+///   a: string,
+///   b: option<s32>,
+/// }
+/// ```
+/// 
+pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     if !strukt.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -71,7 +90,25 @@ pub(crate) fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
+/// Generate a wit enum
+/// ```rust
+/// /// Top comment
+/// enum MyEnum {
+///   /// comment case
+///   Unit,
+///   TupleVariant(String, i32)
+/// }
+/// ```
+/// 
+/// ```ts
+/// /// Top comment
+/// variant my-enum {
+///   /// comment case
+///   unit,
+///   tuple-variant(tuple<string, s32>),
+/// }
+/// ```
+pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     if !enm.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
@@ -135,7 +172,18 @@ pub(crate) fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
+/// Generate a wit function
+/// ```rust
+/// /// Document String
+/// fn foo(a: string, b: Option<i32>) -> Result<string> { Ok(a)}
+/// ```
+/// becomes
+/// ```ts
+/// /// Document String
+/// foo: function(a: string, b: option<s32>) -> expected<string>
+/// ```
+/// 
+pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
     let comment = get_doc_comment(&func.attrs)?;
     let func_name_fmt = func.sig.ident.to_string().to_kebab_case();
@@ -184,7 +232,19 @@ pub(crate) fn gen_wit_function(func: &ItemFn) -> Result<String> {
     }
 }
 
-pub(crate) fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
+
+/// Generate a wit type alias
+/// ```rust
+/// /// Document String
+/// type foo = (String, option<bool>);
+/// ```
+/// becomes
+/// ```ts
+/// /// Document String
+/// type foo = tuple<string, option<bool>>
+/// ```
+/// 
+pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     if !type_alias.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
