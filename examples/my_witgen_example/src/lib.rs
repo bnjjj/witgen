@@ -1,4 +1,6 @@
 #![allow(dead_code, unused_variables)]
+use std::collections::HashMap;
+
 use witgen::witgen;
 
 #[witgen]
@@ -72,4 +74,10 @@ enum TestEnum {
 #[witgen]
 fn test_tuple(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> (String, i64) {
     (String::from("test"), 0i64)
+}
+
+
+#[witgen]
+struct HasHashMap {
+  map: HashMap<String, TestStruct>,
 }

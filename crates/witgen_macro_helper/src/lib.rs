@@ -102,6 +102,28 @@ impl ToWitType for Type {
                             bail!("parenthized path argument is not implemented")
                         }
                     },
+                    wrapper_ty @ "HashMap" => match &last_path_seg.arguments {
+                        syn::PathArguments::AngleBracketed(generic_args) => {
+                            if generic_args.args.len() != 2 {
+                                bail!("generic args of {} should be 2", wrapper_ty);
+                            }
+
+                            let args = generic_args
+                                .args
+                                .iter()
+                                .map(|arg| match arg {
+                                    syn::GenericArgument::Type(ty) => ty.to_wit(),
+                                    other => {
+                                        bail!("generic args type {:?} is not implemented", other)
+                                    }
+                                })
+                                .collect::<Result<Vec<String>>>()?;
+                            format!("list<tuple<{}>>", args.join(","))
+                        }
+                        syn::PathArguments::Parenthesized(_) | syn::PathArguments::None => {
+                            bail!("parenthized path argument is not implemented")
+                        }
+                    },
                     wrapper_ty @ "Result" => match &last_path_seg.arguments {
                         syn::PathArguments::AngleBracketed(generic_args) => {
                             if generic_args.args.len() > 2 {

@@ -23,6 +23,10 @@ type test-tuple = tuple<u64, string>
 
 test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
 
+record has-hash-map {
+    map: list<tuple<string,test-struct>>
+}
+
 variant my-enum {
     unit,
 	tuple-variant(tuple<string, s32>),
