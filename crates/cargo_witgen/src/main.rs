@@ -8,7 +8,7 @@ use once_cell::sync::OnceCell;
 
 use std::{
     env,
-    fs::{self, OpenOptions},
+    fs::{self, OpenOptions, read},
     io::Write,
     path::{Path, PathBuf},
     process::Command,
@@ -34,21 +34,21 @@ fn main() -> Result<()> {
     let matches =
         Opt::from_arg_matches(&matches).ok_or_else(|| anyhow::anyhow!("Command not found"))?;
 
-    match matches.command {
-        opt::Command::Generate { output, args } => {
-            run_generate(target_dir, output, args)?;
-        }
-    }
-
-    Ok(())
+    run_generate(target_dir, matches.command)
 }
 
-fn run_generate(target_dir: &Path, output: Option<PathBuf>, cargo_args: Vec<String>) -> Result<()> {
+fn run_generate(target_dir: &Path, cli_args: crate::opt::Command) -> Result<()> {
     anyhow::ensure!(
         Path::new("Cargo.toml").exists(),
         r#"Failed to read `Cargo.toml`.
-hint: This command only works in the manifest directory of a Cargo package."#
+  hint: This command only works in the manifest directory of a Cargo package."#
     );
+    let crate::opt::Command::Generate {
+        args,
+        output,
+        prefix_file,
+        prefix_string,
+    } = cli_args;
 
     // path to the Cargo executable
     let cargo = env::var("CARGO")
@@ -56,7 +56,7 @@ hint: This command only works in the manifest directory of a Cargo package."#
 
     let check_status = Command::new(&cargo)
         .arg("rustc")
-        .args(cargo_args)
+        .args(args)
         .arg("--")
         .arg("--emit")
         .arg("dep-info,metadata")
@@ -82,7 +82,16 @@ hint: This command only works in the manifest directory of a Cargo package."#
         .create(true)
         .open(filename)
         .expect("cannot create file to generate wit");
-    let generated_comment = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+    let mut generated_comment = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+
+    if let Some(path) = prefix_file {
+      let prefix_file = String::from_utf8(read(path).expect("cannot read prefix_file"))?;
+      generated_comment.push_str(&format!("{}\n\n", prefix_file));
+    }
+    if let Some(prefix) = prefix_string {
+      generated_comment.push_str(&format!("{}\n\n", prefix));
+    }
+
     file.write_all(generated_comment.as_bytes())
         .context("cannot write to wit file")?;
 

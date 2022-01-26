@@ -21,5 +21,14 @@ pub enum Command {
         /// Arguments to be passed to `cargo rustc ...`.
         #[clap(last = true)]
         args: Vec<String>,
+
+        /// Specify prefix file to copy into top of the generated wit file
+        #[clap(long, short = 'p')]
+        prefix_file: Option<PathBuf>,
+
+        /// Specify prefix string to copy into top of the generated wit file
+        /// `--prefix-string 'use * from "string.wit"'`
+        #[clap(long, short = 's')]
+        prefix_string: Option<String>,
     },
 }
