@@ -85,7 +85,7 @@ fn run_generate(target_dir: &Path, cli_args: crate::opt::Command) -> Result<()> 
     let mut generated_comment = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
 
     if let Some(path) = prefix_file {
-      let prefix_file = String::from_utf8(read(path).expect("cannot read prefix_file"))?;
+      let prefix_file = String::from_utf8(read(path)?)?;
       generated_comment.push_str(&format!("{}\n\n", prefix_file));
     }
     if let Some(prefix) = prefix_string {
