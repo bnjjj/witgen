@@ -1,6 +1,6 @@
 [package]
 name = "cargo-witgen"
-version = "0.6.0"
+version = "0.7.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "witgen is a library to help you generate wit definitions in a wit file for WebAssembly and this binary will generate wit file"
