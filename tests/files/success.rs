@@ -1,9 +1,6 @@
 #![allow(dead_code, unused_variables)]
 use std::collections::HashMap;
 
-mod extra_type;
-use extra_type::*;
-
 use witgen::witgen;
 
 #[witgen]
@@ -79,12 +76,10 @@ fn test_tuple(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> 
     (String::from("test"), 0i64)
 }
 
-#[witgen]
-struct HasHashMap {
-    map: HashMap<String, TestStruct>,
-}
 
 #[witgen]
-fn use_string_alias(s: StringAlias) -> StringAlias {
-    s
+struct HasHashMap {
+  map: HashMap<String, TestStruct>,
 }
+
+pub fn main(){}

@@ -17,5 +17,8 @@ categories = ["wasm", "development-tools", "encoding"]
 [dependencies]
 witgen_macro = { path = "crates/witgen_macro", version = "0.6" }
 
+[dev-dependencies]
+trybuild = "1.0.54"
+
 [workspace]
 members = ["crates/witgen_macro", "crates/cargo_witgen", "examples/my_witgen_example"]
