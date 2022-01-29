@@ -2,7 +2,7 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write,
-    path::{Path, PathBuf},
+    path::PathBuf,
 };
 
 use anyhow::{bail, Context, Result};
@@ -31,9 +31,8 @@ macro_rules! handle_error {
                     .into();
             }
         };
-        let target_dir = witgen_macro_helper::get_or_init_target_dir();
 
-        if let Err(err) = witgen_macro_helper::write_to_file(&target_dir, content) {
+        if let Err(err) = witgen_macro_helper::write_to_file_default(content) {
             return syn::Error::new(
                 Span::call_site(),
                 format!("witgen error: cannot write to file ({})", err),
@@ -198,7 +197,11 @@ pub fn hash_string(query: &str) -> String {
     hex::encode(Sha256::digest(query.as_bytes()))
 }
 
-pub fn write_to_file(target_dir: &Path, content: String) -> Result<()> {
+pub fn write_to_file_default(content: String) -> Result<()> {
+  write_to_file(&get_or_init_target_dir(), content)
+}
+
+pub fn write_to_file(target_dir: &PathBuf, content: String) -> Result<()> {
     if std::env::var("WITGEN_ENABLED").map(|v| v.to_lowercase()) != Ok("true".to_string()) {
         return Ok(());
     }
