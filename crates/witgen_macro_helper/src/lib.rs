@@ -9,7 +9,7 @@ use anyhow::{bail, Context, Result};
 use heck::ToKebabCase;
 
 use quote::ToTokens;
-use syn::Type;
+use syn::{Type, TypeReference};
 
 mod generator;
 pub use generator::{
@@ -180,7 +180,10 @@ impl ToWitType for Type {
                         .join(", ")
                 )
             }
-
+            Type::Reference(r) => {
+              let TypeReference {elem, ..}  = r;
+              return elem.to_wit();
+            }
             _ => bail!(
                 "cannot serialize this type '{}' to wit",
                 self.to_token_stream()
@@ -198,7 +201,7 @@ pub fn hash_string(query: &str) -> String {
 }
 
 pub fn write_to_file_default(content: String) -> Result<()> {
-  write_to_file(&get_or_init_target_dir(), content)
+    write_to_file(&get_or_init_target_dir(), content)
 }
 
 pub fn write_to_file(target_dir: &PathBuf, content: String) -> Result<()> {
