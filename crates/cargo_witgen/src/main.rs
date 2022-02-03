@@ -8,7 +8,7 @@ use once_cell::sync::OnceCell;
 
 use std::{
     env,
-    fs::{self, OpenOptions, read},
+    fs::{self, read, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
     process::Command,
@@ -85,11 +85,11 @@ fn run_generate(target_dir: &Path, cli_args: crate::opt::Command) -> Result<()> 
     let mut generated_comment = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
 
     if let Some(path) = prefix_file {
-      let prefix_file = String::from_utf8(read(path)?)?;
-      generated_comment.push_str(&format!("{}\n\n", prefix_file));
+        let prefix_file = String::from_utf8(read(path)?)?;
+        generated_comment.push_str(&format!("{}\n\n", prefix_file));
     }
     if let Some(prefix) = prefix_string {
-      generated_comment.push_str(&format!("{}\n\n", prefix));
+        generated_comment.push_str(&format!("{}\n\n", prefix));
     }
 
     file.write_all(generated_comment.as_bytes())
