@@ -1,9 +1,17 @@
-// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.6.0) 
+// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.8.0) 
 
-use * from "string.wit"///  Here is a doc example to generate in wit file
-record test-bis {
-    coucou: string,
-	btes: list<u8>
+///  Documentation over enum
+variant test-enum {
+    ///  Doc comment over Unit variant in struct
+    unit,
+    number(u64),
+    ///  Doc comment over String variant in struct
+    string-variant(string),
+}
+
+variant my-enum {
+    unit,
+    tuple-variant(tuple<string, s32>),
 }
 
 test-simple: function(array: list<u8>) -> string
@@ -16,12 +24,23 @@ test-result: function(other: list<u8>, number: u8, othernum: s32) -> expected<tu
 
 record init-args {
     owner-id: string,
-	metadata: nft-contract-metadata
+    metadata: nft-contract-metadata
 }
 
 ///  Documentation over struct
 ///  in multi-line
 type test-tuple = tuple<u64, string>
+
+enum colors {
+    red,
+    green,
+    blue,
+}
+
+record test-struct {
+    ///  Doc comment over inner field in struct
+    inner: string
+}
 
 test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
 
@@ -29,27 +48,14 @@ record has-hash-map {
     map: list<tuple<string,test-struct>>
 }
 
-variant my-enum {
-    unit,
-	tuple-variant(tuple<string, s32>),
-}
-
-record test-struct {
-    ///  Doc comment over inner field in struct
-	inner: string
-}
-
 type nft-contract-metadata = string
 
 test-array: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
 
-///  Documentation over enum
-variant test-enum {
-    ///  Doc comment over Unit variant in struct
-	unit,
-	number(u64),
-	///  Doc comment over String variant in struct
-	string-variant(string),
+///  Here is a doc example to generate in wit file
+record test-bis {
+    coucou: string,
+    btes: list<u8>
 }
 
 test-vec: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)

@@ -60,7 +60,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
 
             let field_wit = format!("{}{}", field_name, field.ty.to_wit()?);
             match comment {
-                Some(comment) => Ok(format!("{}\t{}", comment, field_wit)),
+                Some(comment) => Ok(format!("{}    {}", comment, field_wit)),
                 None => Ok(field_wit),
             }
         })
@@ -68,7 +68,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     let attrs = if is_tuple_struct {
         attrs.join(", ")
     } else {
-        attrs.join(",\n\t")
+        attrs.join(",\n    ")
     };
 
     let content = if is_tuple_struct {
@@ -116,6 +116,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     is_known_keyword(&enm_name)?;
 
     let comment = get_doc_comment(&enm.attrs)?;
+    let mut is_wit_enum = true;
     let variants = enm
         .variants
         .iter()
@@ -124,6 +125,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 "named variant fields are not already supported"
             )),
             syn::Fields::Unnamed(unamed) => {
+                is_wit_enum = false;
                 let comment = get_doc_comment(&variant.attrs)?;
                 let fields = unamed
                     .unnamed
@@ -141,7 +143,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 };
 
                 match comment {
-                    Some(comment) => Ok(format!("{}\t{}", comment, variant_wit)),
+                    Some(comment) => Ok(format!("{}    {}", comment, variant_wit)),
                     None => Ok(variant_wit),
                 }
             }
@@ -150,19 +152,19 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 let variant_wit = variant.ident.to_string().to_kebab_case() + ",";
 
                 match comment {
-                    Some(comment) => Ok(format!("{}\t{}", comment, variant_wit)),
+                    Some(comment) => Ok(format!("{}    {}", comment, variant_wit)),
                     None => Ok(variant_wit),
                 }
             }
         })
         .collect::<Result<Vec<String>>>()?
-        .join("\n\t");
+        .join("\n    ");
+        let ty = if is_wit_enum { "enum" } else {"variant"};
     let content = format!(
-        r#"variant {} {{
-    {}
+        r#"{ty} {enm_name} {{
+    {variants}
 }}
-"#,
-        enm_name, variants
+"#
     );
 
     match comment {
