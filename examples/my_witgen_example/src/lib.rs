@@ -7,6 +7,13 @@ use extra_type::*;
 use witgen::witgen;
 
 #[witgen]
+enum Colors {
+  Red,
+  Green,
+  Blue,
+}
+
+#[witgen]
 enum MyEnum {
     Unit,
     TupleVariant(String, i32),

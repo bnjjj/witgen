@@ -116,6 +116,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     is_known_keyword(&enm_name)?;
 
     let comment = get_doc_comment(&enm.attrs)?;
+    let mut is_wit_enum = true;
     let variants = enm
         .variants
         .iter()
@@ -124,6 +125,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 "named variant fields are not already supported"
             )),
             syn::Fields::Unnamed(unamed) => {
+                is_wit_enum = false;
                 let comment = get_doc_comment(&variant.attrs)?;
                 let fields = unamed
                     .unnamed
@@ -157,12 +159,12 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n\t");
+        let ty = if is_wit_enum { "enum" } else {"variant"};
     let content = format!(
-        r#"variant {} {{
-    {}
+        r#"{ty} {enm_name} {{
+    {variants}
 }}
-"#,
-        enm_name, variants
+"#
     );
 
     match comment {
