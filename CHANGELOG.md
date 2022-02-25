@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.9.0] - 2022-02-25
+### Added
+- Add support of wit enum (thanks [@willemneal](https://github.com/willemneal))
+### Changed
+### Fixed
+### Removed
+
+---
 ## [0.8.0] - 2022-02-09
 ### Added
 - Add support of reference type (thanks [@willemneal](https://github.com/willemneal))
