@@ -3,7 +3,7 @@ use std::{fmt::Write, path::PathBuf};
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
 use heck::ToKebabCase;
-use syn::{Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
+use syn::{Attribute, Fields, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
 
 use crate::{is_known_keyword, ToWitType};
 
@@ -116,61 +116,80 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     is_known_keyword(&enm_name)?;
 
     let comment = get_doc_comment(&enm.attrs)?;
-    let mut is_wit_enum = true;
+    let is_wit_enum = enm
+        .variants
+        .iter()
+        .all(|v| matches!(v.fields, Fields::Unit));
+    let mut named_types = String::new();
     let variants = enm
         .variants
         .iter()
-        .map(|variant| match &variant.fields {
-            syn::Fields::Named(_named) => Err(anyhow::anyhow!(
-                "named variant fields are not already supported"
-            )),
-            syn::Fields::Unnamed(unamed) => {
-                is_wit_enum = false;
-                let comment = get_doc_comment(&variant.attrs)?;
-                let fields = unamed
-                    .unnamed
-                    .iter()
-                    .map(|field| field.ty.to_wit())
-                    .collect::<Result<Vec<String>>>()?
-                    .join(", ");
-                let variant_ident = variant.ident.to_string().to_kebab_case();
-                is_known_keyword(&variant_ident)?;
+        .map(|variant| {
+            let ident = variant.ident.to_string().to_kebab_case();
+            let comment = get_doc_comment(&variant.attrs)?;
+            let variant_string = match &variant.fields {
+                syn::Fields::Named(_named) => {
+                    let fields = _named
+                        .named
+                        .iter()
+                        .map(|field| {
+                            field.ty.to_wit().map(|ty| {
+                                let field_doc = get_doc_comment(&field.attrs)
+                                    .unwrap_or(None)
+                                    .as_ref()
+                                    .map_or("".to_string(), |s| format!("    {s}"));
 
-                let variant_wit = if unamed.unnamed.len() > 1 {
-                    format!("{}(tuple<{}>),", variant_ident, fields)
-                } else {
-                    format!("{}({}),", variant_ident, fields)
-                };
-
-                match comment {
-                    Some(comment) => Ok(format!("{}    {}", comment, variant_wit)),
-                    None => Ok(variant_wit),
+                                format!(
+                                    "{}    {}: {}",
+                                    field_doc,
+                                    field.ident.as_ref().unwrap(),
+                                    ty
+                                )
+                            })
+                        })
+                        .collect::<Result<Vec<String>>>()?
+                        .join(",\n");
+                    let inner_type_name = &format!("{enm_name}-{ident}");
+                    let comment = comment.as_deref().unwrap_or_default();
+                    named_types.push_str(&format!(
+                        "{comment}record {inner_type_name} {{\n{fields}\n}}\n"
+                    ));
+                    Ok(format!("{}({})", ident, inner_type_name))
                 }
-            }
-            syn::Fields::Unit => {
-                let comment = get_doc_comment(&variant.attrs)?;
-                let variant_wit = variant.ident.to_string().to_kebab_case() + ",";
+                syn::Fields::Unnamed(unamed) => {
+                    let fields = unamed
+                        .unnamed
+                        .iter()
+                        .map(|field| field.ty.to_wit())
+                        .collect::<Result<Vec<String>>>()?
+                        .join(", ");
+                    is_known_keyword(&ident)?;
 
-                match comment {
-                    Some(comment) => Ok(format!("{}    {}", comment, variant_wit)),
-                    None => Ok(variant_wit),
+                    Ok(if unamed.unnamed.len() > 1 {
+                        format!("{}(tuple<{}>),", ident, fields)
+                    } else {
+                        format!("{}({}),", ident, fields)
+                    })
                 }
-            }
+                syn::Fields::Unit => Ok(ident + ","),
+            };
+            let comment = comment.map_or("".to_string(), |s| format!("    {s}"));
+            variant_string.map(|v| format!("{}    {}", comment, v))
         })
         .collect::<Result<Vec<String>>>()?
-        .join("\n    ");
-        let ty = if is_wit_enum { "enum" } else {"variant"};
+        .join("\n");
+    let ty = if is_wit_enum { "enum" } else { "variant" };
     let content = format!(
         r#"{ty} {enm_name} {{
-    {variants}
+{variants}
 }}
 "#
     );
 
-    match comment {
-        Some(comment) => Ok(format!("{}{}", comment, content)),
-        None => Ok(content),
-    }
+    Ok(format!(
+        "{}{content}\n{named_types}",
+        comment.unwrap_or_default()
+    ))
 }
 
 /// Generate a wit function

@@ -2,7 +2,7 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write,
-    path::PathBuf,
+    path::{PathBuf, Path},
 };
 
 use anyhow::{bail, Context, Result};
@@ -204,7 +204,7 @@ pub fn write_to_file_default(content: String) -> Result<()> {
     write_to_file(&get_or_init_target_dir(), content)
 }
 
-pub fn write_to_file(target_dir: &PathBuf, content: String) -> Result<()> {
+pub fn write_to_file(target_dir: &Path, content: String) -> Result<()> {
     if std::env::var("WITGEN_ENABLED").map(|v| v.to_lowercase()) != Ok("true".to_string()) {
         return Ok(());
     }
