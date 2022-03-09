@@ -75,7 +75,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         format!("type {} = tuple<{}>\n", struct_name, attrs)
     } else {
         format!(
-            r#"record {} {{
+r#"record {} {{
     {}
 }}
 "#,
@@ -83,10 +83,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         )
     };
 
-    match comment {
-        Some(comment) => Ok(format!("{}{}", comment, content)),
-        None => Ok(content),
-    }
+     Ok(format!("{}{}", comment.unwrap_or_default(), content))
 }
 
 /// Generate a wit enum
@@ -137,7 +134,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                                 let field_doc = get_doc_comment(&field.attrs)
                                     .unwrap_or(None)
                                     .as_ref()
-                                    .map_or("".to_string(), |s| format!("    {s}"));
+                                    .map_or("".to_string(), |s| format!("    {}", s));
 
                                 format!(
                                     "{}    {}: {}",
@@ -149,10 +146,11 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                         })
                         .collect::<Result<Vec<String>>>()?
                         .join(",\n");
-                    let inner_type_name = &format!("{enm_name}-{ident}");
+                    let inner_type_name = &format!("{}-{}", enm_name, ident);
                     let comment = comment.as_deref().unwrap_or_default();
                     named_types.push_str(&format!(
-                        "{comment}record {inner_type_name} {{\n{fields}\n}}\n"
+                        "{}record {} {{\n{}\n}}\n",
+                        comment, inner_type_name, fields
                     ));
                     Ok(format!("{}({})", ident, inner_type_name))
                 }
@@ -165,32 +163,35 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                         .join(", ");
                     is_known_keyword(&ident)?;
 
-                    let formatted_variant = if unamed.unnamed.len() > 1 {
-                        format!("{}(tuple<{}>),", ident, fields)
+                    let formatted_field = if unamed.unnamed.len() > 1 {
+                        format!("tuple<{}>", fields)
                     } else {
-                        format!("{}({}),", ident, fields)
+                        fields
                     };
-                    
-                    Ok(formatted_variant)
+
+                    Ok(format!("{}({}),", ident, formatted_field))
                 }
                 syn::Fields::Unit => Ok(ident + ","),
             };
-            let comment = comment.map_or("".to_string(), |s| format!("    {s}"));
+            let comment = comment.map(|s| format!("    {}", s)).unwrap_or_default();
             variant_string.map(|v| format!("{}    {}", comment, v))
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n");
     let ty = if is_wit_enum { "enum" } else { "variant" };
     let content = format!(
-        r#"{ty} {enm_name} {{
-{variants}
+        r#"{} {} {{
+{}
 }}
-"#
+"#,
+        ty, enm_name, variants
     );
 
     Ok(format!(
-        "{}{content}\n{named_types}",
-        comment.unwrap_or_default()
+        "{}{}\n{}",
+        comment.unwrap_or_default(),
+        content,
+        named_types
     ))
 }
 
