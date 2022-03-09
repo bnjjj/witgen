@@ -2,14 +2,15 @@
 use std::{
     fs::{self, OpenOptions},
     io::Write,
-    path::{PathBuf, Path},
+    path::{Path, PathBuf},
 };
 
 use anyhow::{bail, Context, Result};
 use heck::ToKebabCase;
 
+use proc_macro2::Span;
 use quote::ToTokens;
-use syn::{Type, TypeReference};
+use syn::{parse2 as parse, ItemEnum, ItemFn, ItemStruct, ItemType, Type, TypeReference};
 
 mod generator;
 pub use generator::{
@@ -19,30 +20,6 @@ pub use generator::{
 use once_cell::sync::OnceCell;
 
 static TARGET_PATH: OnceCell<PathBuf> = OnceCell::new();
-
-#[macro_export]
-macro_rules! handle_error {
-    ($op: expr) => {
-        let content = match $op {
-            Ok(res) => res,
-            Err(err) => {
-                return syn::Error::new(Span::call_site(), format!("witgen error: {}", err))
-                    .to_compile_error()
-                    .into();
-            }
-        };
-
-        if let Err(err) = witgen_macro_helper::write_to_file_default(content) {
-            return syn::Error::new(
-                Span::call_site(),
-                format!("witgen error: cannot write to file ({})", err),
-            )
-            .to_compile_error()
-            .into();
-        };
-    };
-}
-
 #[doc(hidden)]
 pub fn get_or_init_target_dir() -> PathBuf {
     if let Some(target_dir) = TARGET_PATH.get() {
@@ -181,8 +158,8 @@ impl ToWitType for Type {
                 )
             }
             Type::Reference(r) => {
-              let TypeReference {elem, ..}  = r;
-              return elem.to_wit();
+                let TypeReference { elem, .. } = r;
+                return elem.to_wit();
             }
             _ => bail!(
                 "cannot serialize this type '{}' to wit",
@@ -267,4 +244,57 @@ fn is_known_keyword(ident: &str) -> Result<()> {
     } else {
         Ok(())
     }
+}
+
+pub fn parse_str(s: &str) -> Result<String> {
+    parse_tokens(syn::parse_str::<proc_macro2::TokenStream>(s)?)
+}
+
+pub fn parse_tokens(item: proc_macro2::TokenStream) -> Result<String> {
+    let strukt = parse::<ItemStruct>(item.clone());
+    if let Ok(strukt) = &strukt {
+        return gen_wit_struct(strukt);
+    }
+
+    let func = parse::<ItemFn>(item.clone());
+    if let Ok(func) = &func {
+        return gen_wit_function(func);
+    }
+
+    let enm = parse::<ItemEnum>(item.clone());
+    if let Ok(enm) = &enm {
+        return gen_wit_enum(enm);
+    }
+
+    let type_alias = parse::<ItemType>(item.clone());
+    if let Ok(type_alias) = &type_alias {
+        gen_wit_type_alias(type_alias)
+    } else {
+        bail!(
+            "Cannot put witgen proc macro on this kind of item: {}",
+            item
+        )
+    }
+}
+
+pub fn parse_and_write_to_file(item: proc_macro2::TokenStream) -> Option<proc_macro2::TokenStream> {
+    let content = match parse_tokens(item) {
+        Ok(res) => res,
+        Err(err) => {
+            return Some(
+                syn::Error::new(Span::call_site(), format!("witgen error: {}", err))
+                    .to_compile_error(),
+            )
+        }
+    };
+    if let Err(err) = write_to_file_default(content) {
+        return Some(
+            syn::Error::new(
+                Span::call_site(),
+                format!("witgen error: cannot write to file ({})", err),
+            )
+            .to_compile_error(),
+        );
+    };
+    None
 }

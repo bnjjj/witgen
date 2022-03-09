@@ -1,10 +1,7 @@
 #![deny(warnings)]
 use proc_macro::TokenStream;
-use proc_macro2::Span;
-use syn::{parse, ItemEnum, ItemFn, ItemStruct, ItemType};
-use witgen_macro_helper::{
-    gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, handle_error,
-};
+
+use witgen_macro_helper::parse_and_write_to_file;
 
 /// Proc macro attribute to help cargo-witgen to generate right definitions in `.wit` file
 /// ```no_run
@@ -29,34 +26,6 @@ use witgen_macro_helper::{
 /// ```
 #[proc_macro_attribute]
 pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    let strukt = parse::<ItemStruct>(item.clone());
-    if let Ok(strukt) = &strukt {
-        handle_error!(gen_wit_struct(strukt));
-        return item;
-    }
-
-    let func = parse::<ItemFn>(item.clone());
-    if let Ok(func) = &func {
-        handle_error!(gen_wit_function(func));
-        return item;
-    }
-
-    let enm = parse::<ItemEnum>(item.clone());
-    if let Ok(enm) = &enm {
-        handle_error!(gen_wit_enum(enm));
-        return item;
-    }
-
-    let type_alias = parse::<ItemType>(item.clone());
-    if let Ok(type_alias) = &type_alias {
-        handle_error!(gen_wit_type_alias(type_alias));
-        return item;
-    }
-
-    syn::Error::new_spanned(
-        proc_macro2::TokenStream::from(item),
-        "Cannot put wit_generator proc macro on this kind of item",
-    )
-    .to_compile_error()
-    .into()
+    parse_and_write_to_file(syn::parse::<proc_macro2::TokenStream>(item.clone()).unwrap())
+        .map_or(item, |s| s.into())
 }

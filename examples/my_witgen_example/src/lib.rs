@@ -8,9 +8,9 @@ use witgen::witgen;
 
 #[witgen]
 enum Colors {
-  Red,
-  Green,
-  Blue,
+    Red,
+    Green,
+    Blue,
 }
 
 #[witgen]
@@ -21,22 +21,22 @@ enum MyEnum {
 
 #[witgen]
 enum WithNamedFields {
-  /// Example variant with named fields
-  Example { 
-    /// Doc for inner string
-    name: String 
-  },
-  Unit,
-  ATuple(String),
-  /// Example of a big named field
-  BigExample { 
-    /// Info about field
-    field: u32,
-    b: bool,
-    s: String,
-    a: Vec<u32>,
-    a_tuple: (f64, HashMap<u32, WithNamedFields>)
-  }
+    /// Example variant with named fields
+    Example {
+        /// Doc for inner string
+        name: String,
+    },
+    Unit,
+    ATuple(String),
+    /// Example of a big named field
+    BigExample {
+        /// Info about field
+        field: u32,
+        b: bool,
+        s: String,
+        a: Vec<u32>,
+        a_tuple: (f64, HashMap<u32, WithNamedFields>),
+    },
 }
 
 #[witgen]
