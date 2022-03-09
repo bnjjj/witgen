@@ -20,6 +20,26 @@ enum MyEnum {
 }
 
 #[witgen]
+enum WithNamedFields {
+  /// Example variant with named fields
+  Example { 
+    /// Doc for inner string
+    name: String 
+  },
+  Unit,
+  ATuple(String),
+  /// Example of a big named field
+  BigExample { 
+    /// Info about field
+    field: u32,
+    b: bool,
+    s: String,
+    a: Vec<u32>,
+    a_tuple: (f64, HashMap<u32, WithNamedFields>)
+  }
+}
+
+#[witgen]
 fn test_simple(array: Vec<u8>) -> String {
     String::from("test")
 }
