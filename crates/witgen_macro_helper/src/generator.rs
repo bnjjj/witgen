@@ -165,11 +165,13 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                         .join(", ");
                     is_known_keyword(&ident)?;
 
-                    Ok(if unamed.unnamed.len() > 1 {
+                    let formatted_variant = if unamed.unnamed.len() > 1 {
                         format!("{}(tuple<{}>),", ident, fields)
                     } else {
                         format!("{}({}),", ident, fields)
-                    })
+                    };
+                    
+                    Ok(formatted_variant)
                 }
                 syn::Fields::Unit => Ok(ident + ","),
             };
