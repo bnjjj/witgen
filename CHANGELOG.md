@@ -3,6 +3,14 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.11.0] - 2022-03-10
+### Added
+### Changed
+### Fixed
+- Fix enums with named fields and add initial suite of tests(thanks [@willemneal](https://github.com/willemneal)) [PR #22](https://github.com/bnjjj/witgen/pull/22)
+### Removed
+
+---
 ## [0.10.0] - 2022-03-09
 ### Added
 - Add support for named fields in variants for enums (thanks [@willemneal](https://github.com/willemneal)) [PR #21](https://github.com/bnjjj/witgen/pull/21)
