@@ -75,7 +75,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         format!("type {} = tuple<{}>\n", struct_name, attrs)
     } else {
         format!(
-r#"record {} {{
+            r#"record {} {{
     {}
 }}
 "#,
@@ -83,7 +83,7 @@ r#"record {} {{
         )
     };
 
-     Ok(format!("{}{}", comment.unwrap_or_default(), content))
+    Ok(format!("{}{}", comment.unwrap_or_default(), content))
 }
 
 /// Generate a wit enum
@@ -139,7 +139,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                                 format!(
                                     "{}    {}: {}",
                                     field_doc,
-                                    field.ident.as_ref().unwrap(),
+                                    field.ident.as_ref().unwrap().to_string().to_kebab_case(),
                                     ty
                                 )
                             })
@@ -169,12 +169,12 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                         fields
                     };
 
-                    Ok(format!("{}({}),", ident, formatted_field))
+                    Ok(format!("{}({})", ident, formatted_field))
                 }
-                syn::Fields::Unit => Ok(ident + ","),
+                syn::Fields::Unit => Ok(ident),
             };
             let comment = comment.map(|s| format!("    {}", s)).unwrap_or_default();
-            variant_string.map(|v| format!("{}    {}", comment, v))
+            variant_string.map(|v| format!("{}    {},", comment, v))
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n");
