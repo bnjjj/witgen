@@ -1,10 +1,12 @@
-use std::path::PathBuf;
-
+use std::{path::PathBuf, env};
+use anyhow::Result;
 use clap::Parser;
+use syn_file_expand::read_full_crate_source_code;
+use witgen_macro_helper::Wit;
 
 #[derive(Parser, Debug)]
 #[clap(author = "Benjamin Coenen <benjamin.coenen@hotmail.com>")]
-pub struct Opt {
+pub struct App {
     #[clap(subcommand)]
     pub command: Command,
 }
@@ -31,4 +33,15 @@ pub enum Command {
         #[clap(long, short = 's')]
         prefix_string: Option<String>,
     },
+}
+
+
+impl App {
+  pub fn run(&self) -> Result<()> {
+    
+    let ast = read_full_crate_source_code(env::current_dir()?.join("./src/lib.rs"), |_|Ok(false)).unwrap();
+    println!("{}", Wit::from_file(ast));
+
+    Ok(())
+  }
 }

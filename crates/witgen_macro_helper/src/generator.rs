@@ -1,19 +1,11 @@
-use std::{fmt::Write, path::PathBuf};
+use std::{fmt::Write};
 
 use anyhow::{bail, Context, Result};
-use cargo_metadata::MetadataCommand;
 use heck::ToKebabCase;
 use syn::{Attribute, Fields, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
 
-use crate::{is_known_keyword, ToWitType};
+use crate::wit::{is_known_keyword, ToWitType};
 
-pub fn get_target_dir() -> PathBuf {
-    let metadata = MetadataCommand::new()
-        .exec()
-        .expect("cannot fetch cargo metadata");
-
-    metadata.target_directory.join("witgen").into()
-}
 
 /// Generate a wit record
 /// ```rust
@@ -42,7 +34,6 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     is_known_keyword(&struct_name)?;
 
     let mut is_tuple_struct = false;
-    let comment = get_doc_comment(&strukt.attrs)?;
     let attrs = strukt
         .fields
         .iter()
@@ -71,7 +62,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         attrs.join(",\n    ")
     };
 
-    let content = if is_tuple_struct {
+    Ok(if is_tuple_struct {
         format!("type {} = tuple<{}>\n", struct_name, attrs)
     } else {
         format!(
@@ -81,9 +72,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
 "#,
             struct_name, attrs
         )
-    };
-
-    Ok(format!("{}{}", comment.unwrap_or_default(), content))
+    })
 }
 
 /// Generate a wit enum
@@ -112,7 +101,6 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
     let enm_name = enm.ident.to_string().to_kebab_case();
     is_known_keyword(&enm_name)?;
 
-    let comment = get_doc_comment(&enm.attrs)?;
     let is_wit_enum = enm
         .variants
         .iter()
@@ -187,12 +175,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         ty, enm_name, variants
     );
 
-    Ok(format!(
-        "{}{}\n{}",
-        comment.unwrap_or_default(),
-        content,
-        named_types
-    ))
+    Ok(format!("{}\n{}", content, named_types))
 }
 
 /// Generate a wit function
@@ -208,7 +191,6 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
 ///
 pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
-    let comment = get_doc_comment(&func.attrs)?;
     let func_name_fmt = func.sig.ident.to_string().to_kebab_case();
     is_known_keyword(&func_name_fmt)?;
 
@@ -249,10 +231,7 @@ pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
         }
     }
 
-    match comment {
-        Some(comment) => Ok(format!("{}{}", comment, content)),
-        None => Ok(content),
-    }
+    Ok(content)
 }
 
 /// Generate a wit type alias
@@ -270,22 +249,15 @@ pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     if !type_alias.generics.params.is_empty() {
         bail!("doesn't support generic parameters with witgen");
     }
-    let comment = get_doc_comment(&type_alias.attrs)?;
     let ty = type_alias.ty.to_wit()?;
     let type_alias_ident = type_alias.ident.to_string().to_kebab_case();
     is_known_keyword(&type_alias_ident)?;
 
-    let content = format!("type {} = {}\n", type_alias_ident, ty);
-
-    match comment {
-        Some(comment) => Ok(format!("{}{}", comment, content)),
-        None => Ok(content),
-    }
+    Ok(format!("type {} = {}\n", type_alias_ident, ty))
 }
 
-fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
+pub(crate) fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
     let mut comment = String::new();
-
     for attr in attrs {
         match &attr.parse_meta()? {
             syn::Meta::NameValue(name_val) if name_val.path.is_ident("doc") => {
@@ -296,6 +268,5 @@ fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
             _ => {}
         }
     }
-
     Ok((!comment.is_empty()).then(|| comment))
 }

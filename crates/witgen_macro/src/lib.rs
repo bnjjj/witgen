@@ -1,7 +1,7 @@
 #![deny(warnings)]
 use proc_macro::TokenStream;
 
-use witgen_macro_helper::parse_and_write_to_file;
+// use witgen_macro_helper::parse_and_write_to_file;
 
 /// Proc macro attribute to help cargo-witgen to generate right definitions in `.wit` file
 /// ```no_run
@@ -26,6 +26,5 @@ use witgen_macro_helper::parse_and_write_to_file;
 /// ```
 #[proc_macro_attribute]
 pub fn witgen(_attr: TokenStream, item: TokenStream) -> TokenStream {
-    parse_and_write_to_file(syn::parse::<proc_macro2::TokenStream>(item.clone()).unwrap())
-        .map_or(item, |s| s.into())
+    item
 }
