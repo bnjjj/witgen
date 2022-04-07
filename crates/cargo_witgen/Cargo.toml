@@ -17,7 +17,7 @@ categories = ["command-line-interface", "command-line-interface", "wasm"]
 [dependencies]
 anyhow = "1.0.51"
 cargo_metadata = "0.14.1"
-clap = "=3.0.0-beta.5"
-clap_derive = "=3.0.0-beta.5"
+clap = {version = "=3.1.8", features = ["derive", "cargo"]}
+clap_derive = "=3.1.7"
 glob = "0.3.0"
 once_cell = "1.8.0"
