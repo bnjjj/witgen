@@ -132,7 +132,7 @@ impl Display for Wit {
         let wit_str = match self {
             Wit::File(file) => Ok(file
                 .iter()
-                .map(|item| format!("{item}"))
+                .map(ToString::to_string)
                 .collect::<Vec<String>>()
                 .join("\n")),
             Wit::Record(item) => gen_wit_struct(item),
