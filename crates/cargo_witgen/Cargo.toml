@@ -19,5 +19,4 @@ anyhow = "1.0.51"
 cargo_metadata = "0.14.1"
 clap = {version = "=3.1.8", features = ["derive", "cargo"]}
 clap_derive = "=3.1.7"
-syn-file-expand = "0.1.1"
 witgen_macro_helper= {path= "../witgen_macro_helper"}
