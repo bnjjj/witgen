@@ -3,7 +3,7 @@
 
 use anyhow::{bail, Context, Result};
 use cargo_metadata::MetadataCommand;
-use clap::{crate_version, AppSettings, FromArgMatches, IntoApp};
+use clap::{crate_version, FromArgMatches, IntoApp};
 use once_cell::sync::OnceCell;
 
 use std::{
@@ -25,14 +25,14 @@ fn main() -> Result<()> {
     let target_dir = TARGET_PATH.get_or_init(get_target_dir);
     let args = env::args_os().skip(2);
 
-    let matches = Opt::into_app()
+    let matches = Opt::command()
         .version(crate_version!())
         .bin_name("cargo witgen")
-        .setting(AppSettings::NoBinaryName)
+        .no_binary_name(true)
         .get_matches_from(args);
 
     let matches =
-        Opt::from_arg_matches(&matches).ok_or_else(|| anyhow::anyhow!("Command not found"))?;
+        Opt::from_arg_matches(&matches).context("Command not found")?;
 
     run_generate(target_dir, matches.command)
 }
