@@ -1,11 +1,10 @@
-use std::{fmt::Write};
+use std::fmt::Write;
 
 use anyhow::{bail, Context, Result};
 use heck::ToKebabCase;
 use syn::{Attribute, Fields, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
 
 use crate::wit::{is_known_keyword, ToWitType};
-
 
 /// Generate a wit record
 /// ```rust
@@ -62,7 +61,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         attrs.join(",\n    ")
     };
 
-    Ok(if is_tuple_struct {
+    let content = if is_tuple_struct {
         format!("type {} = tuple<{}>\n", struct_name, attrs)
     } else {
         format!(
@@ -72,7 +71,8 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
 "#,
             struct_name, attrs
         )
-    })
+    };
+    Ok(content)
 }
 
 /// Generate a wit enum

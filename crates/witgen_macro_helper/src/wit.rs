@@ -7,10 +7,11 @@ use anyhow::{bail, Result};
 use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
-    parse2 as parse, Attribute, ItemEnum, ItemFn, ItemStruct, ItemType, Type as SynType,
-    TypeReference,
+    parse2 as parse, Attribute, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
+    Type as SynType, TypeReference,
 };
 
+/// Wit type that correspond to Rust Types using `syn`'s representation
 pub enum Wit {
     File(Vec<Wit>),
     Record(ItemStruct),
@@ -20,43 +21,11 @@ pub enum Wit {
 }
 
 impl Wit {
-    pub fn try_parse(item: proc_macro2::TokenStream) -> Result<Self> {
-        use Wit::*;
-        Ok(if let Ok(file) = parse::<syn::File>(item.clone()) {
-            Wit::from_file(file)
-        } else if let Ok(strukt) = parse::<ItemStruct>(item.clone()) {
-            Record(strukt)
-        } else if let Ok(func) = parse::<ItemFn>(item.clone()) {
-            Function(func)
-        } else if let Ok(enm) = parse::<ItemEnum>(item.clone()) {
-            Variant(enm)
-        } else if let Ok(type_alias) = parse::<ItemType>(item.clone()) {
-            Type(type_alias)
-        } else {
-            bail!(
-                "Cannot put witgen proc macro on this kind of item: {}",
-                item
-            )
-        })
-    }
-
-    pub fn from_item(item: syn::Item) -> Result<Self> {
-        Ok(match item {
-            syn::Item::Enum(item) => Wit::Variant(item),
-            syn::Item::Fn(item) => Wit::Function(item),
-            syn::Item::Struct(item) => Wit::Record(item),
-            syn::Item::Type(item) => Wit::Type(item),
-            _ => bail!("cannot prase item"),
-        })
-    }
-
-    pub fn from_file(file: syn::File) -> Self {
-        Wit::File(
-            file.items
-                .into_iter()
-                .filter_map(|item| Wit::from_item(item).map_or(None, Some))
-                .collect(),
-        )
+    fn from_items(items: Vec<Item>) -> Vec<Self> {
+        items
+            .into_iter()
+            .filter_map(|item| item.try_into().ok())
+            .collect()
     }
 
     pub fn attrs(&self) -> Option<&[Attribute]> {
@@ -71,6 +40,89 @@ impl Wit {
 
     pub fn get_doc(&self) -> Result<Option<String>> {
         get_doc_comment(self.attrs().unwrap_or_default())
+    }
+
+    pub fn validate(self) -> Result<Self> {
+        use Wit::*;
+        match self {
+            File(_) => Ok(self),
+            other if has_witgen_macro(&self.attrs()) => Ok(other),
+            _ => bail!("Has no witgen macro"),
+        }
+    }
+}
+
+fn has_witgen_macro(attrs: &Option<&[Attribute]>) -> bool {
+    attrs.map_or(false, |attrs| {
+        for attr in attrs.iter() {
+            if is_witgen_macro(attr) {
+                return true;
+            }
+        }
+        false
+    })
+}
+
+fn is_witgen_macro(attr: &Attribute) -> bool {
+  // TODO: make this not use string comparison.
+  format!("{:#?}", attr.path).contains("witgen")
+}
+
+impl From<syn::File> for Wit {
+    fn from(file: syn::File) -> Self {
+        Wit::File(Wit::from_items(file.items))
+    }
+}
+
+impl TryFrom<syn::Item> for Wit {
+    type Error = anyhow::Error;
+
+    fn try_from(item: syn::Item) -> Result<Self, Self::Error> {
+        match item {
+            Item::Enum(item) => Wit::Variant(item),
+            Item::Fn(item) => Wit::Function(item),
+            Item::Struct(item) => Wit::Record(item),
+            Item::Type(item) => Wit::Type(item),
+            Item::Mod(ItemMod {
+                content: Some((_, items)),
+                ..
+            }) => Wit::File(Wit::from_items(items)),
+            _ => bail!("cannot prase item"),
+        }
+        .validate()
+    }
+}
+
+impl TryFrom<proc_macro2::TokenStream> for Wit {
+    type Error = anyhow::Error;
+
+    fn try_from(item: proc_macro2::TokenStream) -> Result<Self, Self::Error> {
+        use Wit::*;
+        if let Ok(file) = parse::<syn::File>(item.clone()) {
+            file.into()
+        } else if let Ok(strukt) = parse(item.clone()) {
+            Record(strukt)
+        } else if let Ok(func) = parse(item.clone()) {
+            Function(func)
+        } else if let Ok(enm) = parse(item.clone()) {
+            Variant(enm)
+        } else if let Ok(type_alias) = parse(item.clone()) {
+            Type(type_alias)
+        } else {
+            bail!(
+                "Cannot put witgen proc macro on this kind of item: {}",
+                item
+            )
+        }
+        .validate()
+    }
+}
+
+impl TryFrom<&str> for Wit {
+    type Error = anyhow::Error;
+
+    fn try_from(s: &str) -> Result<Self, Self::Error> {
+        syn::parse_str::<proc_macro2::TokenStream>(s)?.try_into()
     }
 }
 

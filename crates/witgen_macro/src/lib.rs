@@ -1,8 +1,6 @@
 #![deny(warnings)]
 use proc_macro::TokenStream;
 
-// use witgen_macro_helper::parse_and_write_to_file;
-
 /// Proc macro attribute to help cargo-witgen to generate right definitions in `.wit` file
 /// ```no_run
 /// use witgen::witgen;

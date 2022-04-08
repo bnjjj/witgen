@@ -1,8 +1,11 @@
+use std::{path::PathBuf, fs::read};
+
 use anyhow::Result;
+use difference::assert_diff;
 use wit_parser::Interface;
 
 fn parse_str(s: &str) -> Result<String> {
-    witgen_macro_helper::parse_str(s)
+    Ok(witgen_macro_helper::parse_str(s)?.to_string())
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {
@@ -14,12 +17,6 @@ fn parse(s: &str) {
     parse_wit_str(&res).expect(&res);
 }
 
-#[test]
-fn test() {
-    let t = trybuild::TestCases::new();
-    std::env::set_var("WITGEN_ENABLED", "true");
-    t.pass("tests/files/success.rs");
-}
 
 #[test]
 fn enum_simple() {
@@ -43,4 +40,15 @@ enum MyEnum {
 }
 ";
     parse(simple);
+}
+
+
+#[test]
+fn test_diff() {
+  let wit = witgen_macro_helper::parse_crate_as_file(&PathBuf::from(&"examples/my_witgen_example/src/lib.rs")).unwrap();
+  let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
+  let file_str = String::from_utf8(read(path).unwrap()).unwrap();
+  let (_, rest) = file_str.split_once("\n").unwrap();
+  assert_diff!(rest.trim_matches('\n'), &wit.to_string(), "", 1); 
+
 }

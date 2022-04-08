@@ -1,18 +1,28 @@
 #![deny(warnings)]
+use std::path::Path;
 
-use anyhow::{Result};
+use anyhow::{bail, Result};
+use syn_file_expand::read_full_crate_source_code;
 
-
-mod generator;
-
+pub mod generator;
 mod wit;
 pub use wit::Wit;
 
-
-pub fn parse_str(s: &str) -> Result<String> {
-    parse_tokens(syn::parse_str::<proc_macro2::TokenStream>(s)?)
+/// Parse str into a Wit
+pub fn parse_str(s: &str) -> Result<Wit> {
+    s.try_into()
 }
 
-pub fn parse_tokens(item: proc_macro2::TokenStream) -> Result<String> {
-    Ok(format!("{}", Wit::try_parse(item)?))
+/// Parse proc_macro2 tokens into Wit
+pub fn parse_tokens(item: proc_macro2::TokenStream) -> Result<Wit> {
+    item.try_into()
+}
+
+/// Read a crate starting from a single file then parse into Wit
+pub fn parse_crate_as_file(path: &Path) -> Result<Wit> {
+    if let Ok(ast) = read_full_crate_source_code(path, |_| Ok(false)) {
+        Ok(ast.into())
+    } else {
+        bail!("Failed to parse crate source {:?}", path)
+    }
 }
