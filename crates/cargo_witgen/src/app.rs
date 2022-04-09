@@ -8,7 +8,7 @@ use std::{
 use witgen_macro_helper::parse_crate_as_file;
 
 #[derive(Parser, Debug)]
-#[clap(author = "Benjamin Coenen <benjamin.coenen@hotmail.com>")]
+#[clap(author = "Benjamin Coenen <benjamin.coenen@hotmail.com>, Willem Wyndham <willem@ahalabs.dev>")]
 pub struct App {
     #[clap(subcommand)]
     pub command: Command,
