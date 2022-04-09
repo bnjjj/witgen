@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.12.0] - 2022-04-09
+### Added
+- `Wit` type [PR #25](https://github.com/bnjjj/witgen/pull/25)
+### Changed
+ - Use `syn-file-expand` instead of Cargo [PR #25](https://github.com/bnjjj/witgen/pull/25)
+---
 ## [0.11.0] - 2022-03-10
 ### Added
 ### Changed

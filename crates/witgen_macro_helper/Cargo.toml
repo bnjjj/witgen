@@ -1,6 +1,6 @@
 [package]
 name = "witgen_macro_helper"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "Macros helpers for witgen which is a library to help you generate wit definitions in a wit file for WebAssembly"
@@ -10,6 +10,7 @@ repository = "https://github.com/bnjjj/witgen"
 homepage = "https://github.com/bnjjj/witgen"
 documentation = "https://docs.rs/witgen_macro_helper"
 keywords = ["webassembly", "generate", "cargo", "wasm"]
+rust-version = "1.60.0"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -20,3 +21,4 @@ proc-macro2 = { version = "1.0.32", features = ["span-locations"] }
 quote = "1.0.10"
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 syn-file-expand = "0.1.1"
+
