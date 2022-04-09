@@ -5,7 +5,7 @@ use difference::assert_diff;
 use wit_parser::Interface;
 
 fn parse_str(s: &str) -> Result<String> {
-    Ok(witgen_macro_helper::parse_str(s)?.to_string())
+    witgen_macro_helper::parse_str(s).map(|s| s.to_string())
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {
