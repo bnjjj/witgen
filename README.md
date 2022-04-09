@@ -64,10 +64,10 @@ fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result
 - Then you can launch the CLI (at the root of your package):
 
 ```bash
-$ cargo witgen generate
+cargo witgen generate
 ```
 
-- It will generate a `witgen.wit` file at the root of your package:
+- It will generate a `index.wit` file at the root of your package:
 
 ```wit
 record test-struct {
@@ -76,8 +76,8 @@ record test-struct {
 
 variant test-enum {
     unit,
-	number(u64),
-	string-variant(string),
+    number(u64),
+    string-variant(string),
 }
 
 test : function(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> expected<tuple<string, s64>>
@@ -90,9 +90,8 @@ test : function(other: list <u8>, test-struct: test-struct, other-enum: test-enu
 For now using `#[witgen]` have some limitations:
 
 - You can use the proc macro `#[witgen]` only on `struct`, `enum`, `type alias`, `function`
-- Generic parameters or lifetime anotations are not supported
+- Generic parameters or lifetime anotations are not supported, except for `HashMap`, which is interpreted as `list<tuple<key, value>>`.
 - Type `&str` is not supported (but you can use `String`)
-- Named struct variants in `enum` are not already supported (examples `enum Test { NamedVariant: { inner: String } }` but this one is supported `enum Test { UnNamedVariant(String, usize) }`)
 - References, `Box`, `Rc`, `Arc` and all types of smart pointers are not supported
 - Methods are not supported
 - There is no semantic analysis, which means if your `function`, `struct` or `enum` uses a non scalar type, you have to add `#[witgen]` where this type is declared (it won't fail at the compile time)

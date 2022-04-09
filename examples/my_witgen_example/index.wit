@@ -1,0 +1,91 @@
+// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.12.0) 
+
+
+type string-alias = string
+
+enum colors {
+    red,
+    green,
+    blue,
+}
+
+
+variant my-enum {
+    unit,
+    tuple-variant(tuple<string, s32>),
+}
+
+
+variant with-named-fields {
+    ///  Example variant with named fields
+    example(with-named-fields-example),
+    unit,
+    a-tuple(string),
+    ///  Example of a big named field
+    big-example(with-named-fields-big-example),
+}
+
+///  Example variant with named fields
+record with-named-fields-example {
+    ///  Doc for inner string
+    name: string
+}
+///  Example of a big named field
+record with-named-fields-big-example {
+    ///  Info about field
+    field: u32,
+    b: bool,
+    s: string,
+    a: list<u32>,
+    a-tuple: tuple<f64, list<tuple<u32,with-named-fields>>>
+}
+
+test-simple: function(array: list<u8>) -> string
+
+type nft-contract-metadata = string
+
+record init-args {
+    owner-id: string,
+    metadata: nft-contract-metadata
+}
+
+test-array: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
+
+test-vec: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
+
+test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
+
+test-result: function(other: list<u8>, number: u8, othernum: s32) -> expected<tuple<string, u64>, string>
+
+///  Here is a doc example to generate in wit file
+record test-bis {
+    coucou: string,
+    btes: list<u8>
+}
+
+///  Documentation over struct
+///  in multi-line
+type test-tuple = tuple<u64, string>
+
+record test-struct {
+    ///  Doc comment over inner field in struct
+    inner: string
+}
+
+///  Documentation over enum
+variant test-enum {
+    ///  Doc comment over Unit variant in struct
+    unit,
+    number(u64),
+    ///  Doc comment over String variant in struct
+    string-variant(string),
+}
+
+
+test-tuple: function(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> (string, s64)
+
+record has-hash-map {
+    map: list<tuple<string,test-struct>>
+}
+
+use-string-alias: function(s: string-alias) -> string-alias

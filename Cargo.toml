@@ -1,6 +1,6 @@
 [package]
 name = "witgen"
-version = "0.11.0"
+version = "0.12.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "witgen is a library to help you generate wit definitions in a wit file for WebAssembly"
@@ -15,14 +15,14 @@ categories = ["wasm", "development-tools", "encoding"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-witgen_macro = { path = "crates/witgen_macro", version = "0.11" }
+witgen_macro = { path = "crates/witgen_macro", version = "0.12" }
 
 [dev-dependencies]
-trybuild = "1.0.54"
 wit-parser = {git = "https://github.com/bytecodealliance/wit-bindgen", rev = "dab589f"}
 witgen_macro_helper = { path = "crates/witgen_macro_helper"}
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 anyhow = "1.0.51"
+difference = "2.0.0"
 
 [workspace]
 members = ["crates/witgen_macro", "crates/cargo_witgen", "examples/my_witgen_example"]
