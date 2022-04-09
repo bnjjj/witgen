@@ -1,11 +1,13 @@
 use std::{path::PathBuf, fs::read};
+use std::str::FromStr;
 
 use anyhow::Result;
 use difference::assert_diff;
 use wit_parser::Interface;
+use witgen_macro_helper::Wit;
 
 fn parse_str(s: &str) -> Result<String> {
-    witgen_macro_helper::parse_str(s).map(|s| s.to_string())
+    Wit::from_str(s).map(|wit| wit.to_string())
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {

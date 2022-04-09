@@ -1,4 +1,5 @@
 use std::fmt::Display;
+use std::str::FromStr;
 
 use crate::generator::{
     gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, get_doc_comment,
@@ -116,6 +117,14 @@ impl TryFrom<proc_macro2::TokenStream> for Wit {
         }
         .validate()
     }
+}
+
+impl FromStr for Wit {
+  type Err = anyhow::Error;
+
+  fn from_str(s: &str) -> Result<Self, Self::Err> {
+    s.try_into()
+  }
 }
 
 impl TryFrom<&str> for Wit {

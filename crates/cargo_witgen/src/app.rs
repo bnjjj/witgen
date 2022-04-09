@@ -56,8 +56,9 @@ impl App {
         }
         let wit = parse_crate_as_file(input)?;
 
-        let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+        let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
         wit_str.push_str(&prefix_string.join("\n"));
+        wit_str.push('\n');
         for path in prefix_file {
             let prefix_file = String::from_utf8(read(path)?)?;
             wit_str.push_str(&format!("{}\n\n", prefix_file));

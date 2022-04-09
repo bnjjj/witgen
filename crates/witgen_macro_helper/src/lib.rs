@@ -8,11 +8,6 @@ pub mod generator;
 mod wit;
 pub use wit::Wit;
 
-/// Parse str into a Wit
-pub fn parse_str(s: &str) -> Result<Wit> {
-    s.try_into()
-}
-
 /// Parse proc_macro2 tokens into Wit
 pub fn parse_tokens(item: proc_macro2::TokenStream) -> Result<Wit> {
     item.try_into()
