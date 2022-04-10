@@ -25,9 +25,15 @@ pub enum Command {
 
 #[derive(Debug, Args)]
 pub struct Witgen {
-    /// Specify output file to generate wit definitions
-    #[clap(long, short = 'i', default_value = "./src/lib.rs")]
-    pub input: PathBuf,
+    /// Specify input file to generate wit definitions from
+    #[clap(long, short = 'i')]
+    pub input: Option<PathBuf>,
+
+    /// Specify input directory to generate wit definitions from
+    /// 
+    /// Will expect library: `<input_dir>/src/lib.rs`
+    #[clap(long, short = 'd', default_value = ".")]
+    pub input_dir: PathBuf,
 
     /// Specify output file to generate wit definitions
     #[clap(long, short = 'o', default_value = "index.wit")]
@@ -51,14 +57,20 @@ impl Witgen {
     pub fn generate_str(&self) -> Result<String> {
         let Witgen {
             input,
+            input_dir,
             prefix_file,
             prefix_string,
             ..
         } = self;
+        // TODO: figure out how to avoid the clone()
+        let input = input
+            .as_ref()
+            .map_or_else(|| input_dir.join("src/lib.rs"), |i| i.clone());
+
         if !input.exists() {
             bail!("input {:?} doesn't exist", input);
         }
-        let wit = parse_crate_as_file(input)?;
+        let wit = parse_crate_as_file(&input)?;
 
         let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
         wit_str.push_str(&prefix_string.join("\n"));
