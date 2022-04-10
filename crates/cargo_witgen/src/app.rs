@@ -30,8 +30,9 @@ pub struct Witgen {
     pub input: Option<PathBuf>,
 
     /// Specify input directory to generate wit definitions from
-    /// 
-    /// Will expect library: `<input_dir>/src/lib.rs`
+    ///
+    ///
+    /// Will expect library: `<input-dir>/src/lib.rs`
     #[clap(long, short = 'd', default_value = ".")]
     pub input_dir: PathBuf,
 
