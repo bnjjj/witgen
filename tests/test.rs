@@ -47,13 +47,15 @@ enum MyEnum {
 #[test]
 fn test_diff() {
     let witgen = Witgen {
-        input: PathBuf::from(
-          &"examples/my_witgen_example/src/lib.rs",
+        input_dir: PathBuf::from(
+          &"examples/my_witgen_example",
       ),
         output:PathBuf::from(&"index.wit"),
         prefix_file:vec![],
         prefix_string:vec![],
         stdout: false,
+        input: None,
+
     };
     let wit = witgen.generate_str().unwrap();
     let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
