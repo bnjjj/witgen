@@ -50,7 +50,7 @@ pub struct Witgen {
     #[clap(long, short = 's')]
     pub prefix_string: Vec<String>,
 
-    /// Print results to stdout instead of to file
+    /// Print results to stdout instead file
     #[clap(long)]
     pub stdout: bool,
 }
