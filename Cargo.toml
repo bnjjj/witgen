@@ -23,6 +23,7 @@ witgen_macro_helper = { path = "crates/witgen_macro_helper"}
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 anyhow = "1.0.51"
 difference = "2.0.0"
+cargo-witgen = {path = "crates/cargo_witgen"}
 
 [workspace]
 members = ["crates/witgen_macro", "crates/cargo_witgen", "examples/my_witgen_example"]

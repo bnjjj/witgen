@@ -1,5 +1,5 @@
 use anyhow::{bail, Context, Result};
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 use std::{
     fs::{read, OpenOptions},
     io::Write,
@@ -8,49 +8,53 @@ use std::{
 use witgen_macro_helper::parse_crate_as_file;
 
 #[derive(Parser, Debug)]
-#[clap(author = "Benjamin Coenen <benjamin.coenen@hotmail.com>, Willem Wyndham <willem@ahalabs.dev>")]
+#[clap(
+    author = "Benjamin Coenen <benjamin.coenen@hotmail.com>, Willem Wyndham <willem@ahalabs.dev>"
+)]
 pub struct App {
     #[clap(subcommand)]
     pub command: Command,
 }
 
-#[derive(Parser, Debug)]
+#[derive(Debug, Subcommand)]
 pub enum Command {
     /// Generate wit files
     #[clap(alias = "gen")]
-    Generate {
-        /// Specify output file to generate wit definitions
-        #[clap(long, short = 'i', default_value = "./src/lib.rs")]
-        input: PathBuf,
-
-        /// Specify output file to generate wit definitions
-        #[clap(long, short = 'o', default_value = "index.wit")]
-        output: PathBuf,
-
-        /// Specify prefix file to copy into top of the generated wit file
-        #[clap(long, short = 'p')]
-        prefix_file: Vec<PathBuf>,
-
-        /// Specify prefix string to copy into top of the generated wit file
-        /// `--prefix-string 'use * from "string.wit"'`
-        #[clap(long, short = 's')]
-        prefix_string: Vec<String>,
-
-        /// Print results to stdout instead of to file
-        #[clap(long)]
-        stdout: bool,
-    },
+    Generate(Witgen),
 }
 
-impl App {
-    pub fn run(&self) -> Result<()> {
-        let Command::Generate {
+#[derive(Debug, Args)]
+pub struct Witgen {
+    /// Specify output file to generate wit definitions
+    #[clap(long, short = 'i', default_value = "./src/lib.rs")]
+    pub input: PathBuf,
+
+    /// Specify output file to generate wit definitions
+    #[clap(long, short = 'o', default_value = "index.wit")]
+    pub output: PathBuf,
+
+    /// Specify prefix file to copy into top of the generated wit file
+    #[clap(long, short = 'p')]
+    pub prefix_file: Vec<PathBuf>,
+
+    /// Specify prefix string to copy into top of the generated wit file
+    /// `--prefix-string 'use * from "string.wit"'`
+    #[clap(long, short = 's')]
+    pub prefix_string: Vec<String>,
+
+    /// Print results to stdout instead of to file
+    #[clap(long)]
+    pub stdout: bool,
+}
+
+impl Witgen {
+    pub fn generate_str(&self) -> Result<String> {
+        let Witgen {
             input,
-            output,
             prefix_file,
             prefix_string,
-            stdout,
-        } = &self.command;
+            ..
+        } = self;
         if !input.exists() {
             bail!("input {:?} doesn't exist", input);
         }
@@ -64,13 +68,37 @@ impl App {
             wit_str.push_str(&format!("{}\n\n", prefix_file));
         }
         wit_str.push_str(&wit.to_string());
-        if *stdout {
+
+        Ok(wit_str)
+    }
+
+    pub fn output_wit_str(&self, wit_str: &str) -> Result<()> {
+        if self.stdout {
             println!("{wit_str}");
         } else {
-            write_file(output, &wit_str)?;
+            write_file(&self.output, wit_str)?;
         }
-
         Ok(())
+    }
+
+    pub fn generate_and_output(&self) -> Result<()> {
+        self.output_wit_str(&self.generate_str()?)
+    }
+}
+
+impl Command {
+    pub fn run(&self) -> Result<()> {
+        match self {
+            Command::Generate(witgen) => witgen.generate_and_output()?,
+        };
+        Ok(())
+    }
+}
+
+impl App {
+    #[allow(dead_code)]
+    pub fn run(&self) -> Result<()> {
+        self.command.run()
     }
 }
 

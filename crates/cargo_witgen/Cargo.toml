@@ -20,3 +20,11 @@ cargo_metadata = "0.14.1"
 clap = {version = "=3.1.8", features = ["derive", "cargo"]}
 clap_derive = "=3.1.7"
 witgen_macro_helper= {path= "../witgen_macro_helper"}
+
+[lib]
+name = "cargo_witgen"
+path = "src/lib.rs"
+
+[[bin]]
+name = "cargo_witgen"
+path = "src/main.rs"
