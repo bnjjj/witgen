@@ -3,6 +3,10 @@
 
 type string-alias = string
 
+type private-type = list<f32>
+
+type second-level = bool
+
 enum colors {
     red,
     green,
