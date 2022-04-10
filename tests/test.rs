@@ -54,7 +54,7 @@ fn test_diff() {
         stdout: false,
         input: None,
     };
-    let wit = witgen.generate_str().unwrap();
+    let wit = witgen.generate_str(witgen.read_input().unwrap()).unwrap();
     let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
     let file_str = String::from_utf8(read(path).unwrap()).unwrap();
     assert_diff!(&file_str, &wit, "", 0);

@@ -5,7 +5,8 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
-use witgen_macro_helper::parse_crate_as_file;
+use witgen_macro_helper::{Wit, parse_crate_as_file};
+use syn::File;
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -55,28 +56,25 @@ pub struct Witgen {
 }
 
 impl Witgen {
-    pub fn generate_str(&self) -> Result<String> {
-        let Witgen {
-            input,
-            input_dir,
-            prefix_file,
-            prefix_string,
-            ..
-        } = self;
-        // TODO: figure out how to avoid the clone()
-        let input = input
-            .as_ref()
-            .map_or_else(|| input_dir.join("src/lib.rs"), |i| i.clone());
 
-        if !input.exists() {
-            bail!("input {:?} doesn't exist", input);
-        }
-        let wit = parse_crate_as_file(&input)?;
+    pub fn read_input(&self) -> Result<File> {
+              // TODO: figure out how to avoid the clone()
+              let input = self.input
+              .as_ref()
+              .map_or_else(|| self.input_dir.join("src/lib.rs"), |i| i.clone());
+  
+          if !input.exists() {
+              bail!("input {:?} doesn't exist", input);
+          }
+          parse_crate_as_file(&input)
 
+    }
+    pub fn generate_str(&self, file: File) -> Result<String> {
+        let wit: Wit = file.into();
         let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
-        wit_str.push_str(&prefix_string.join("\n"));
+        wit_str.push_str(&self.prefix_string.join("\n"));
         wit_str.push('\n');
-        for path in prefix_file {
+        for path in &self.prefix_file {
             let prefix_file = String::from_utf8(read(path)?)?;
             wit_str.push_str(&format!("{}\n\n", prefix_file));
         }
@@ -85,7 +83,7 @@ impl Witgen {
         Ok(wit_str)
     }
 
-    pub fn output_wit_str(&self, wit_str: &str) -> Result<()> {
+    pub fn write_output(&self, wit_str: &str) -> Result<()> {
         if self.stdout {
             println!("{wit_str}");
         } else {
@@ -94,15 +92,17 @@ impl Witgen {
         Ok(())
     }
 
-    pub fn generate_and_output(&self) -> Result<()> {
-        self.output_wit_str(&self.generate_str()?)
+    pub fn run(&self) -> Result<()> {
+        let input = self.read_input()?;
+        let wit_str = self.generate_str(input)?;
+        self.write_output(&wit_str)
     }
 }
 
 impl Command {
     pub fn run(&self) -> Result<()> {
         match self {
-            Command::Generate(witgen) => witgen.generate_and_output()?,
+            Command::Generate(witgen) => witgen.run()?,
         };
         Ok(())
     }
