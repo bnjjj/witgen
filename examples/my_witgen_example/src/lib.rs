@@ -116,5 +116,4 @@ fn use_string_alias(s: StringAlias) -> StringAlias {
     s
 }
 
-
 fn has_no_macro() {}

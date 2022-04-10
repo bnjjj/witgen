@@ -9,12 +9,12 @@ use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
     parse2 as parse, Attribute, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference,
+    Type as SynType, TypeReference, File
 };
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
 pub enum Wit {
-    File(Vec<Wit>),
+    Mod(Vec<Wit>, Vec<Attribute>),
     Record(ItemStruct),
     Function(ItemFn),
     Variant(ItemEnum),
@@ -35,7 +35,7 @@ impl Wit {
             Wit::Function(item) => Some(&item.attrs),
             Wit::Variant(item) => Some(&item.attrs),
             Wit::Type(item) => Some(&item.attrs),
-            Wit::File(_) => None,
+            Wit::Mod(_, attrs) => Some(attrs),
         }
     }
 
@@ -46,7 +46,7 @@ impl Wit {
     pub fn validate(self) -> Result<Self> {
         use Wit::*;
         match self {
-            File(_) => Ok(self),
+            Mod(_, _) => Ok(self),
             other if has_witgen_macro(&self.attrs()) => Ok(other),
             _ => bail!("Has no witgen macro"),
         }
@@ -65,20 +65,20 @@ fn has_witgen_macro(attrs: &Option<&[Attribute]>) -> bool {
 }
 
 fn is_witgen_macro(attr: &Attribute) -> bool {
-  // TODO: make this not use string comparison.
-  format!("{:#?}", attr.path).contains("witgen")
+    // TODO: make this not use string comparison.
+    format!("{:#?}", attr.path).contains("witgen")
 }
 
-impl From<syn::File> for Wit {
-    fn from(file: syn::File) -> Self {
-        Wit::File(Wit::from_items(file.items))
+impl From<File> for Wit {
+    fn from(file: File) -> Self {
+        Wit::Mod(Wit::from_items(file.items), vec![])
     }
 }
 
-impl TryFrom<syn::Item> for Wit {
+impl TryFrom<Item> for Wit {
     type Error = anyhow::Error;
 
-    fn try_from(item: syn::Item) -> Result<Self, Self::Error> {
+    fn try_from(item: Item) -> Result<Self, Self::Error> {
         match item {
             Item::Enum(item) => Wit::Variant(item),
             Item::Fn(item) => Wit::Function(item),
@@ -86,8 +86,9 @@ impl TryFrom<syn::Item> for Wit {
             Item::Type(item) => Wit::Type(item),
             Item::Mod(ItemMod {
                 content: Some((_, items)),
+                attrs,
                 ..
-            }) => Wit::File(Wit::from_items(items)),
+            }) => Wit::Mod(Wit::from_items(items), attrs),
             _ => bail!("cannot prase item"),
         }
         .validate()
@@ -98,33 +99,26 @@ impl TryFrom<proc_macro2::TokenStream> for Wit {
     type Error = anyhow::Error;
 
     fn try_from(item: proc_macro2::TokenStream) -> Result<Self, Self::Error> {
-        use Wit::*;
-        if let Ok(file) = parse::<syn::File>(item.clone()) {
-            file.into()
-        } else if let Ok(strukt) = parse(item.clone()) {
-            Record(strukt)
-        } else if let Ok(func) = parse(item.clone()) {
-            Function(func)
-        } else if let Ok(enm) = parse(item.clone()) {
-            Variant(enm)
-        } else if let Ok(type_alias) = parse(item.clone()) {
-            Type(type_alias)
+        if let Ok(file) = parse::<File>(item.clone()) {
+            Ok(file.into())
+        } else if let Ok(item) = parse::<Item>(item.clone()) {
+            Wit::try_from(item)
         } else {
             bail!(
                 "Cannot put witgen proc macro on this kind of item: {}",
                 item
             )
-        }
+        }?
         .validate()
     }
 }
 
 impl FromStr for Wit {
-  type Err = anyhow::Error;
+    type Err = anyhow::Error;
 
-  fn from_str(s: &str) -> Result<Self, Self::Err> {
-    s.try_into()
-  }
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        s.try_into()
+    }
 }
 
 impl TryFrom<&str> for Wit {
@@ -139,7 +133,7 @@ impl Display for Wit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let doc = self.get_doc().unwrap_or(None).unwrap_or_default();
         let wit_str = match self {
-            Wit::File(file) => Ok(file
+            Wit::Mod(wit, _) => Ok(wit
                 .iter()
                 .map(ToString::to_string)
                 .collect::<Vec<String>>()
