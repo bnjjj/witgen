@@ -28,5 +28,5 @@ name = "cargo_witgen"
 path = "src/lib.rs"
 
 [[bin]]
-name = "cargo_witgen"
+name = "cargo-witgen"
 path = "src/main.rs"
