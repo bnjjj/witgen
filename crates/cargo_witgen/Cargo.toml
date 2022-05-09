@@ -1,6 +1,6 @@
 [package]
 name = "cargo-witgen"
-version = "0.12.0"
+version = "0.13.0"
 edition = "2021"
 authors = ["Benjamin Coenen <benjamin.coenen@hotmail.com>"]
 description = "witgen is a library to help you generate wit definitions in a wit file for WebAssembly and this binary will generate wit file"
@@ -19,7 +19,7 @@ anyhow = "1.0.51"
 cargo_metadata = "0.14.1"
 clap = {version = "=3.1.8", features = ["derive", "cargo"]}
 clap_derive = "=3.1.7"
-witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.12" }
+witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.13" }
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 
 
