@@ -8,8 +8,8 @@ use anyhow::{bail, Result};
 use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
-    parse2 as parse, Attribute, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference, File
+    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
+    Type as SynType, TypeReference,
 };
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
