@@ -83,3 +83,9 @@ struct HasHashMap {
 }
 
 pub fn main(){}
+
+#[witgen]
+type Float32 = f32;
+
+#[witgen]
+type Float64 = f64;
