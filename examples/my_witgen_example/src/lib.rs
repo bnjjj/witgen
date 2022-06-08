@@ -35,7 +35,7 @@ enum WithNamedFields {
         b: bool,
         s: String,
         a: Vec<u32>,
-        a_tuple: (f64, HashMap<u32, WithNamedFields>),
+        a_tuple: (f64, HashMap<u32, MyEnum>),
     },
 }
 

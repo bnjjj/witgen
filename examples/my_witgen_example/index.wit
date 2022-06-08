@@ -41,7 +41,7 @@ record with-named-fields-big-example {
     b: bool,
     s: string,
     a: list<u32>,
-    a-tuple: tuple<float64, list<tuple<u32,with-named-fields>>>
+    a-tuple: tuple<float64, list<tuple<u32,my-enum>>>
 }
 
 test-simple: function(array: list<u8>) -> string
@@ -53,9 +53,9 @@ record init-args {
     metadata: nft-contract-metadata
 }
 
-test-array: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
+test-array: function(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
 
-test-vec: function(other: list<u8>, number: u8, othernum: s32) -> (string, u64)
+test-vec: function(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
 
 test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
 
@@ -86,7 +86,7 @@ variant test-enum {
 }
 
 
-test-tuple: function(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> (string, s64)
+test-tuple: function(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> tuple<string, s64>
 
 record has-hash-map {
     map: list<tuple<string,test-struct>>

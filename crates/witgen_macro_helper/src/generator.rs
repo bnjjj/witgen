@@ -224,7 +224,7 @@ pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
                 .map(|f| f.to_wit())
                 .collect::<Result<Vec<String>>>()?
                 .join(", ");
-            writeln!(&mut content, " -> ({})", tuple_fields).context("cannot write return type")?;
+            writeln!(&mut content, " -> tuple<{}>", tuple_fields).context("cannot write return type")?;
         } else {
             writeln!(&mut content, " -> {}", return_ty.to_wit()?)
                 .context("cannot write return type")?;
