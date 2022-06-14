@@ -3,6 +3,13 @@
 All notable changes to this project will be documented in this file.
 
 ---
+## [0.14.0] - 2022-06-14
+### Added
+### Changed
+- f32/f64 --> float32/float64. (Not sure why this decision was made. Why make it longer?)
+- Multi-value returns are now tuples
+- Can no longer have recursive type definitions.
+---
 ## [0.12.0] - 2022-04-09
 ### Added
 - `Wit` type [PR #25](https://github.com/bnjjj/witgen/pull/25)
