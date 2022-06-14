@@ -1,14 +1,14 @@
 //! This crate provides a way to parse a whole crate as a file and then parse this into a `Wit` type.
 //! Currently this is a wrapper type for `syn` types.
-//! 
-//! 
-//! 
+//!
+//!
+//!
 #![deny(warnings)]
 use std::path::Path;
 
 use anyhow::{bail, Result};
-pub use syn_file_expand::read_full_crate_source_code;
 use syn::File;
+pub use syn_file_expand::read_full_crate_source_code;
 pub mod generator;
 mod wit;
 pub use wit::Wit;
@@ -35,5 +35,5 @@ pub fn parse_crate_as_file(path: &Path) -> Result<File> {
 /// let wit: Wit = file.into();
 /// ```
 pub fn parse_file(file: File) -> Wit {
-  file.into()
+    file.into()
 }

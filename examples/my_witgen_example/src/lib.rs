@@ -15,7 +15,7 @@ enum Colors {
 
 #[witgen]
 enum MyEnum {
-    Unit,
+    UnitType,
     TupleVariant(String, i32),
 }
 
@@ -26,7 +26,7 @@ enum WithNamedFields {
         /// Doc for inner string
         name: String,
     },
-    Unit,
+    UnitType,
     ATuple(String),
     /// Example of a big named field
     BigExample {
@@ -35,7 +35,7 @@ enum WithNamedFields {
         b: bool,
         s: String,
         a: Vec<u32>,
-        a_tuple: (f64, HashMap<u32, WithNamedFields>),
+        a_tuple: (f64, HashMap<u32, MyEnum>),
     },
 }
 
@@ -94,8 +94,8 @@ struct TestStruct {
 /// Documentation over enum
 #[witgen]
 enum TestEnum {
-    /// Doc comment over Unit variant in struct
-    Unit,
+    /// Doc comment over UnitType variant in struct
+    UnitType,
     Number(u64),
     /// Doc comment over String variant in struct
     StringVariant(String),
@@ -117,3 +117,9 @@ fn use_string_alias(s: StringAlias) -> StringAlias {
 }
 
 fn has_no_macro() {}
+
+#[witgen]
+type Float32Bit = f32;
+
+#[witgen]
+type Float64Bit = f64;

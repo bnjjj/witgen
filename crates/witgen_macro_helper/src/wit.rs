@@ -8,8 +8,8 @@ use anyhow::{bail, Result};
 use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
-    parse2 as parse, Attribute, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference, File
+    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
+    Type as SynType, TypeReference,
 };
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
@@ -250,8 +250,11 @@ impl ToWitType for SynType {
                             }
                             "usize" => String::from("u64"),
                             "isize" => String::from("i64"),
-                            ident @ ("f32" | "f64" | "u8" | "u16" | "u32" | "u64" | "char"
-                            | "bool") => ident.to_string(),
+                            ident @ ("u8" | "u16" | "u32" | "u64" | "char" | "bool") => {
+                                ident.to_string()
+                            }
+                            "f32" => "float32".to_string(),
+                            "f64" => "float64".to_string(),
                             ident => {
                                 let ident_formatted = ident.to_string().to_kebab_case();
                                 is_known_keyword(&ident_formatted)?;
@@ -302,8 +305,8 @@ pub(crate) fn is_known_keyword(ident: &str) -> Result<()> {
             | "s16"
             | "s32"
             | "s64"
-            | "f32"
-            | "f64"
+            | "float32"
+            | "float64"
             | "char"
             | "handle"
             | "record"

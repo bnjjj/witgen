@@ -5,8 +5,8 @@ use std::{
     io::Write,
     path::{Path, PathBuf},
 };
-use witgen_macro_helper::{Wit, parse_crate_as_file};
 use syn::File;
+use witgen_macro_helper::{parse_crate_as_file, Wit};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -56,19 +56,19 @@ pub struct Witgen {
 }
 
 impl Witgen {
-
     pub fn read_input(&self) -> Result<File> {
-              // TODO: figure out how to avoid the clone()
-              let input = self.input
-              .as_ref()
-              .map_or_else(|| self.input_dir.join("src/lib.rs"), |i| i.clone());
-  
-          if !input.exists() {
-              bail!("input {:?} doesn't exist", input);
-          }
-          parse_crate_as_file(&input)
+        // TODO: figure out how to avoid the clone()
+        let input = self
+            .input
+            .as_ref()
+            .map_or_else(|| self.input_dir.join("src/lib.rs"), |i| i.clone());
 
+        if !input.exists() {
+            bail!("input {:?} doesn't exist", input);
+        }
+        parse_crate_as_file(&input)
     }
+
     pub fn generate_str(&self, file: File) -> Result<String> {
         let wit: Wit = file.into();
         let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));

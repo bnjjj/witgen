@@ -54,8 +54,22 @@ fn test_diff() {
         stdout: false,
         input: None,
     };
+    
     let wit = witgen.generate_str(witgen.read_input().unwrap()).unwrap();
+    parse_wit_str(&wit).expect("Failed to parse example file");
     let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
     let file_str = String::from_utf8(read(path).unwrap()).unwrap();
     assert_diff!(&file_str, &wit, "", 0);
+}
+
+#[test]
+fn floats() {
+    let simple = r#"
+#[witgen]
+type Float32Bit = f32;
+
+#[witgen]
+type Float64Bit = f64;
+"#;
+    println!("{:?}", parse_wit_str(&parse_str(simple).unwrap()).unwrap())
 }
