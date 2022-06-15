@@ -195,7 +195,7 @@ pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
     is_known_keyword(&func_name_fmt)?;
 
     let mut content = String::new();
-    write!(&mut content, "{}: function(", func_name_fmt)
+    write!(&mut content, "{}: func(", func_name_fmt)
         .context("cannot write function declaration in wit")?;
     let fn_args: Vec<String> = signature
         .inputs

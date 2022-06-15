@@ -296,7 +296,7 @@ pub(crate) fn is_known_keyword(ident: &str) -> Result<()> {
         "use"
             | "type"
             | "resource"
-            | "function"
+            | "func"
             | "u8"
             | "u16"
             | "u32"

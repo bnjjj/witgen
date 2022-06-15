@@ -44,7 +44,7 @@ record with-named-fields-big-example {
     a-tuple: tuple<float64, list<tuple<u32,my-enum>>>
 }
 
-test-simple: function(array: list<u8>) -> string
+test-simple: func(array: list<u8>) -> string
 
 type nft-contract-metadata = string
 
@@ -53,13 +53,13 @@ record init-args {
     metadata: nft-contract-metadata
 }
 
-test-array: function(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
+test-array: func(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
 
-test-vec: function(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
+test-vec: func(other: list<u8>, number: u8, othernum: s32) -> tuple<string, u64>
 
-test-option: function(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
+test-option: func(other: list<u8>, number: u8, othernum: s32) -> option<tuple<string, u64>>
 
-test-result: function(other: list<u8>, number: u8, othernum: s32) -> expected<tuple<string, u64>, string>
+test-result: func(other: list<u8>, number: u8, othernum: s32) -> expected<tuple<string, u64>, string>
 
 ///  Here is a doc example to generate in wit file
 record test-bis {
@@ -86,13 +86,13 @@ variant test-enum {
 }
 
 
-test-tuple: function(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> tuple<string, s64>
+test-tuple: func(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> tuple<string, s64>
 
 record has-hash-map {
     map: list<tuple<string,test-struct>>
 }
 
-use-string-alias: function(s: string-alias) -> string-alias
+use-string-alias: func(s: string-alias) -> string-alias
 
 type float32-bit = float32
 
