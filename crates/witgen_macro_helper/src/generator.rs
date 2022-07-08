@@ -2,7 +2,11 @@ use std::fmt::Write;
 
 use anyhow::{bail, Context, Result};
 use heck::ToKebabCase;
-use syn::{Attribute, Fields, ItemEnum, ItemFn, ItemStruct, ItemType, Lit, ReturnType, Type};
+use quote::quote;
+use syn::{
+    Attribute, Field, Fields, ItemEnum, ItemFn, ItemStruct, ItemTrait, ItemType, ItemUse, Lit,
+    ReturnType, Signature, TraitItem, Type, UsePath, UseTree,
+};
 
 use crate::wit::{is_known_keyword, ToWitType};
 
@@ -32,47 +36,41 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
     let struct_name = strukt.ident.to_string().to_kebab_case();
     is_known_keyword(&struct_name)?;
 
-    let mut is_tuple_struct = false;
-    let attrs = strukt
-        .fields
-        .iter()
-        .map(|field| {
-            let field_name = match &field.ident {
-                Some(ident) => ident.to_string().to_kebab_case() + ": ",
-                None => {
-                    is_tuple_struct = true;
-                    String::new()
-                }
-            };
-            is_known_keyword(&field_name)?;
-
-            let comment = get_doc_comment(&field.attrs)?;
-
-            let field_wit = format!("{}{}", field_name, field.ty.to_wit()?);
-            match comment {
-                Some(comment) => Ok(format!("{}    {}", comment, field_wit)),
-                None => Ok(field_wit),
-            }
-        })
-        .collect::<Result<Vec<String>>>()?;
-    let attrs = if is_tuple_struct {
-        attrs.join(", ")
+    let is_tuple_struct = strukt.fields.iter().any(|f| f.ident.is_none());
+    let fields = gen_fields(strukt.fields.iter().collect::<Vec<&Field>>())?;
+    let fields = if is_tuple_struct {
+        fields.join(", ")
     } else {
-        attrs.join(",\n    ")
+        fields.join(",\n")
     };
 
     let content = if is_tuple_struct {
-        format!("type {} = tuple<{}>\n", struct_name, attrs)
+        format!("type {} = tuple<{}>\n", struct_name, fields)
     } else {
         format!(
             r#"record {} {{
-    {}
+{}
 }}
 "#,
-            struct_name, attrs
+            struct_name, fields
         )
     };
     Ok(content)
+}
+
+fn gen_fields(iter: Vec<&Field>) -> Result<Vec<String>> {
+    iter.into_iter()
+        .map(|field| {
+            let field_name = &field
+                .ident
+                .as_ref()
+                .map(|ident| format!("  {}: ", ident.to_string().to_kebab_case()))
+                .unwrap_or_default();
+            is_known_keyword(&field_name)?;
+            let comment = get_doc_comment(&field.attrs, 1)?.unwrap_or_default();
+            Ok(format!("{comment}{}{}", field_name, field.ty.to_wit()?))
+        })
+        .collect()
 }
 
 /// Generate a wit enum
@@ -111,29 +109,10 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         .iter()
         .map(|variant| {
             let ident = variant.ident.to_string().to_kebab_case();
-            let comment = get_doc_comment(&variant.attrs)?;
+            let comment = get_doc_comment(&variant.attrs, 1)?;
             let variant_string = match &variant.fields {
                 syn::Fields::Named(_named) => {
-                    let fields = _named
-                        .named
-                        .iter()
-                        .map(|field| {
-                            field.ty.to_wit().map(|ty| {
-                                let field_doc = get_doc_comment(&field.attrs)
-                                    .unwrap_or(None)
-                                    .as_ref()
-                                    .map_or("".to_string(), |s| format!("    {}", s));
-
-                                format!(
-                                    "{}    {}: {}",
-                                    field_doc,
-                                    field.ident.as_ref().unwrap().to_string().to_kebab_case(),
-                                    ty
-                                )
-                            })
-                        })
-                        .collect::<Result<Vec<String>>>()?
-                        .join(",\n");
+                    let fields = gen_fields(_named.named.iter().collect())?.join(",\n");
                     let inner_type_name = &format!("{}-{}", enm_name, ident);
                     let comment = comment.as_deref().unwrap_or_default();
                     named_types.push_str(&format!(
@@ -161,8 +140,8 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 }
                 syn::Fields::Unit => Ok(ident),
             };
-            let comment = comment.map(|s| format!("    {}", s)).unwrap_or_default();
-            variant_string.map(|v| format!("{}    {},", comment, v))
+            let comment = comment.unwrap_or_default();
+            variant_string.map(|v| format!("{}  {},", comment, v))
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n");
@@ -191,7 +170,11 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
 ///
 pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
     let signature = &func.sig;
-    let func_name_fmt = func.sig.ident.to_string().to_kebab_case();
+    gen_wit_function_from_signature(signature)
+}
+
+fn gen_wit_function_from_signature(signature: &Signature) -> Result<String> {
+    let func_name_fmt = signature.ident.to_string().to_kebab_case();
     is_known_keyword(&func_name_fmt)?;
 
     let mut content = String::new();
@@ -224,7 +207,8 @@ pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
                 .map(|f| f.to_wit())
                 .collect::<Result<Vec<String>>>()?
                 .join(", ");
-            writeln!(&mut content, " -> tuple<{}>", tuple_fields).context("cannot write return type")?;
+            writeln!(&mut content, " -> tuple<{}>", tuple_fields)
+                .context("cannot write return type")?;
         } else {
             writeln!(&mut content, " -> {}", return_ty.to_wit()?)
                 .context("cannot write return type")?;
@@ -256,13 +240,18 @@ pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
     Ok(format!("type {} = {}\n", type_alias_ident, ty))
 }
 
-pub(crate) fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
+pub(crate) fn get_doc_comment(attrs: &[Attribute], depth: usize) -> Result<Option<String>> {
     let mut comment = String::new();
     for attr in attrs {
         match &attr.parse_meta()? {
             syn::Meta::NameValue(name_val) if name_val.path.is_ident("doc") => {
                 if let Lit::Str(lit_str) = &name_val.lit {
-                    writeln!(&mut comment, "/// {}", lit_str.value())?;
+                    writeln!(
+                        &mut comment,
+                        "{}/// {}",
+                        " ".repeat(depth * 2),
+                        lit_str.value()
+                    )?;
                 }
             }
             _ => {}

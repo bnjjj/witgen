@@ -7,3 +7,4 @@ edition = "2021"
 
 [dependencies]
 witgen = { path = "../.." }
+example_dep = { path = "../example_dep"}

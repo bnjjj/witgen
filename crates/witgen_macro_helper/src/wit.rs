@@ -45,7 +45,7 @@ impl Wit {
     }
 
     pub fn get_doc(&self) -> Result<Option<String>> {
-        get_doc_comment(self.attrs().unwrap_or_default())
+        get_doc_comment(self.attrs().unwrap_or_default(), 0)
     }
 
     pub fn validate(self) -> Result<Self> {

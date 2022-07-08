@@ -1,10 +1,15 @@
 #![allow(dead_code, unused_variables)]
 use std::collections::HashMap;
+use witgen::witgen;
+
+#[witgen]
+use example_dep::ExternalDep;
 
 mod extra_type;
 use extra_type::*;
 
-use witgen::witgen;
+
+
 
 #[witgen]
 enum Colors {
@@ -84,7 +89,6 @@ struct TestBis {
 /// Documentation over struct
 /// in multi-line
 struct TestTuple(usize, String);
-
 #[witgen]
 struct TestStruct {
     /// Doc comment over inner field in struct
@@ -95,6 +99,7 @@ struct TestStruct {
 #[witgen]
 enum TestEnum {
     /// Doc comment over UnitType variant in struct
+    /// Two lines
     UnitType,
     Number(u64),
     /// Doc comment over String variant in struct
@@ -123,3 +128,18 @@ type Float32Bit = f32;
 
 #[witgen]
 type Float64Bit = f64;
+
+#[witgen]
+pub fn use_ext_dep() -> ExternalDep {
+    String::from("hello")
+}
+
+/// This is an example wit interface
+#[witgen]
+trait ExampleInterface {
+  fn foo() -> String;
+
+  /// Has doc string
+  /// With two lines
+  fn f(w: WithNamedFields) -> TestEnum;
+}
