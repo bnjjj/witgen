@@ -2,10 +2,9 @@ use std::fmt::Write;
 
 use anyhow::{bail, Context, Result};
 use heck::ToKebabCase;
-use quote::quote;
 use syn::{
-    Attribute, Field, Fields, ItemEnum, ItemFn, ItemStruct, ItemTrait, ItemType, ItemUse, Lit,
-    ReturnType, Signature, TraitItem, Type, UsePath, UseTree,
+    Attribute, Field, Fields, Ident, ItemEnum, ItemFn, ItemStruct, ItemTrait, ItemType, ItemUse,
+    Lit, ReturnType, Signature, TraitItem, Type, UsePath, UseTree,
 };
 
 use crate::wit::{is_known_keyword, ToWitType};
@@ -33,7 +32,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
 
-    let struct_name = strukt.ident.to_string().to_kebab_case();
+    let struct_name = gen_wit_ident(&strukt.ident);
     is_known_keyword(&struct_name)?;
 
     let is_tuple_struct = strukt.fields.iter().any(|f| f.ident.is_none());
@@ -64,9 +63,10 @@ fn gen_fields(iter: Vec<&Field>) -> Result<Vec<String>> {
             let field_name = &field
                 .ident
                 .as_ref()
-                .map(|ident| format!("  {}: ", ident.to_string().to_kebab_case()))
+                .map(gen_wit_ident)
+                .map(|ident| format!("  {ident}: "))
                 .unwrap_or_default();
-            is_known_keyword(&field_name)?;
+            is_known_keyword(field_name)?;
             let comment = get_doc_comment(&field.attrs, 1)?.unwrap_or_default();
             Ok(format!("{comment}{}{}", field_name, field.ty.to_wit()?))
         })
@@ -96,7 +96,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
 
-    let enm_name = enm.ident.to_string().to_kebab_case();
+    let enm_name = gen_wit_ident(&enm.ident);
     is_known_keyword(&enm_name)?;
 
     let is_wit_enum = enm
@@ -108,7 +108,8 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         .variants
         .iter()
         .map(|variant| {
-            let ident = variant.ident.to_string().to_kebab_case();
+            let ident = gen_wit_ident(&variant.ident);
+            is_known_keyword(&ident)?;
             let comment = get_doc_comment(&variant.attrs, 1)?;
             let variant_string = match &variant.fields {
                 syn::Fields::Named(_named) => {
@@ -128,7 +129,6 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                         .map(|field| field.ty.to_wit())
                         .collect::<Result<Vec<String>>>()?
                         .join(", ");
-                    is_known_keyword(&ident)?;
 
                     let formatted_field = if unamed.unnamed.len() > 1 {
                         format!("tuple<{}>", fields)
@@ -174,7 +174,7 @@ pub fn gen_wit_function(func: &ItemFn) -> Result<String> {
 }
 
 fn gen_wit_function_from_signature(signature: &Signature) -> Result<String> {
-    let func_name_fmt = signature.ident.to_string().to_kebab_case();
+    let func_name_fmt = gen_wit_ident(&signature.ident);
     is_known_keyword(&func_name_fmt)?;
 
     let mut content = String::new();
@@ -187,7 +187,7 @@ fn gen_wit_function_from_signature(signature: &Signature) -> Result<String> {
             syn::FnArg::Receiver(_) => bail!("does not support methods"),
             syn::FnArg::Typed(typed_pat) => {
                 let pat = match &*typed_pat.pat {
-                    syn::Pat::Ident(ident) => ident.ident.to_string().to_kebab_case(),
+                    syn::Pat::Ident(ident) => gen_wit_ident(&ident.ident),
                     _ => bail!("can't handle this kind of fn argument"),
                 };
                 is_known_keyword(&pat)?;
@@ -234,7 +234,7 @@ pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
     let ty = type_alias.ty.to_wit()?;
-    let type_alias_ident = type_alias.ident.to_string().to_kebab_case();
+    let type_alias_ident = gen_wit_ident(&type_alias.ident);
     is_known_keyword(&type_alias_ident)?;
 
     Ok(format!("type {} = {}\n", type_alias_ident, ty))
@@ -261,19 +261,19 @@ pub(crate) fn get_doc_comment(attrs: &[Attribute], depth: usize) -> Result<Optio
 }
 
 pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
-    let s = match &import.tree {
-        UseTree::Path(UsePath { ident, .. }) => quote! {#ident}.to_string(),
+    let import_name = match &import.tree {
+        UseTree::Path(UsePath { ident, .. }) => gen_wit_ident(ident),
         UseTree::Name(_) => todo!(),
         UseTree::Rename(_) => todo!(),
         UseTree::Glob(_) => todo!(),
         UseTree::Group(_) => todo!(),
-    }.to_kebab_case();
-    Ok(format!("use * from {s}"))
+    };
+    Ok(format!("use * from {import_name}"))
 }
 
 pub fn gen_wit_interface(trait_: &ItemTrait) -> Result<String> {
-    let name = trait_.ident.to_string();
-    let mut res = format!("Interface {name} {{\n");
+    let name = gen_wit_ident(&trait_.ident);
+    let mut res = format!("interface {name} {{\n");
 
     for item in trait_.items.iter() {
         match item {
@@ -293,4 +293,8 @@ pub fn gen_wit_interface(trait_: &ItemTrait) -> Result<String> {
     }
     res.push_str("}}\n");
     Ok(res)
+}
+
+fn gen_wit_ident(ident: &Ident) -> String {
+    ident.to_string().to_kebab_case()
 }
