@@ -270,3 +270,38 @@ pub(crate) fn get_doc_comment(attrs: &[Attribute]) -> Result<Option<String>> {
     }
     Ok((!comment.is_empty()).then(|| comment))
 }
+
+pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
+    let s = match &import.tree {
+        UseTree::Path(UsePath { ident, .. }) => quote! {#ident}.to_string(),
+        UseTree::Name(_) => todo!(),
+        UseTree::Rename(_) => todo!(),
+        UseTree::Glob(_) => todo!(),
+        UseTree::Group(_) => todo!(),
+    };
+    Ok(format!("use * from {s}"))
+}
+
+pub fn gen_wit_interface(trait_: &ItemTrait) -> Result<String> {
+    let name = trait_.ident.to_string();
+    let mut res = format!("Interface {name} {{\n");
+
+    for item in trait_.items.iter() {
+        match item {
+            TraitItem::Const(_) => todo!("Const in Trait isn't implemented yet"),
+            TraitItem::Method(method) => {
+                let comment = get_doc_comment(&method.attrs, 1)?.unwrap_or_default();
+                res.push_str(&format!(
+                    "{comment}  {}",
+                    gen_wit_function_from_signature(&method.sig)?
+                ))
+            }
+            TraitItem::Type(_) => todo!("Type in Trait isn't implemented yet"),
+            TraitItem::Macro(_) => todo!("Macro in Trait isn't implemented yet"),
+            TraitItem::Verbatim(_) => todo!("Verbatim in Trait isn't implemented yet"),
+            _ => todo!("extra case in Trait isn't implemented yet"),
+        }
+    }
+    res.push_str("}}\n");
+    Ok(res)
+}

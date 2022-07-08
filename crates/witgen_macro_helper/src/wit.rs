@@ -2,15 +2,16 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, get_doc_comment,
+    gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, get_doc_comment, gen_wit_import, gen_wit_interface,
 };
 use anyhow::{bail, Result};
 use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
     parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference,
+    Type as SynType, TypeReference, ItemUse, ItemTrait,
 };
+// use wit_parser::Interface;
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
 pub enum Wit {
@@ -19,10 +20,12 @@ pub enum Wit {
     Function(ItemFn),
     Variant(ItemEnum),
     Type(ItemType),
+    Use(ItemUse),
+    Interface(ItemTrait)
 }
 
 impl Wit {
-    fn from_items(items: Vec<Item>) -> Vec<Self> {
+    pub(crate) fn from_items(items: Vec<Item>) -> Vec<Self> {
         items
             .into_iter()
             .filter_map(|item| item.try_into().ok())
@@ -36,6 +39,8 @@ impl Wit {
             Wit::Variant(item) => Some(&item.attrs),
             Wit::Type(item) => Some(&item.attrs),
             Wit::Mod(_, attrs) => Some(attrs),
+            Wit::Use(item) => Some(&item.attrs),
+            Wit::Interface(item) => Some(&item.attrs),
         }
     }
 
@@ -84,6 +89,8 @@ impl TryFrom<Item> for Wit {
             Item::Fn(item) => Wit::Function(item),
             Item::Struct(item) => Wit::Record(item),
             Item::Type(item) => Wit::Type(item),
+            Item::Use(item) => Wit::Use(item),
+            Item::Trait(item) => Wit::Interface(item),
             Item::Mod(ItemMod {
                 content: Some((_, items)),
                 attrs,
@@ -142,6 +149,8 @@ impl Display for Wit {
             Wit::Function(item) => gen_wit_function(item),
             Wit::Variant(item) => gen_wit_enum(item),
             Wit::Type(item) => gen_wit_type_alias(item),
+            Wit::Use(item) =>  gen_wit_import(item),
+            Wit::Interface(item) => gen_wit_interface(item),
         }
         .unwrap_or_default();
         write!(f, "{doc}{wit_str}")
