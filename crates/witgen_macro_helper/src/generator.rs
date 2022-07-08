@@ -267,7 +267,7 @@ pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
         UseTree::Rename(_) => todo!(),
         UseTree::Glob(_) => todo!(),
         UseTree::Group(_) => todo!(),
-    };
+    }.to_kebab_case();
     Ok(format!("use * from {s}"))
 }
 

@@ -6,6 +6,7 @@ use cargo_witgen::Witgen;
 use difference::assert_diff;
 use wit_parser::Interface;
 use witgen_macro_helper::Wit;
+use k9::assert_equal;
 
 fn parse_str(s: &str) -> Result<String> {
     Wit::from_str(s).map(|wit| wit.to_string())
@@ -59,7 +60,7 @@ fn test_diff() {
     parse_wit_str(&wit).expect("Failed to parse example file");
     let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
     let file_str = String::from_utf8(read(path).unwrap()).unwrap();
-    assert_diff!(&file_str, &wit, "", 0);
+    assert_equal!(file_str, wit);
 }
 
 #[test]
