@@ -16,11 +16,11 @@ categories = ["command-line-interface", "command-line-interface", "wasm"]
 
 [dependencies]
 anyhow = "1.0.51"
-cargo_metadata = "0.14.1"
-clap = {version = "=3.1.8", features = ["derive", "cargo"]}
-clap_derive = "=3.1.7"
+# cargo_metadata = "0.15.0"
+clap = {version = "3.2.10", features = ["derive", "cargo"]}
 witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.14" }
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
+clap-cargo-extra = { git = "https://github.com/ahalabs/clap-cargo-extra" }
 
 
 [lib]

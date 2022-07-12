@@ -291,7 +291,7 @@ pub fn gen_wit_interface(trait_: &ItemTrait) -> Result<String> {
             _ => todo!("extra case in Trait isn't implemented yet"),
         }
     }
-    res.push_str("}}\n");
+    res.push_str("}\n");
     Ok(res)
 }
 

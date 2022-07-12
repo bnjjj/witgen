@@ -22,7 +22,6 @@ wit-parser = { version = "0.2.0", package = "aha-wit-parser"}
 witgen_macro_helper = { path = "crates/witgen_macro_helper", version = "0.14" }
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 anyhow = "1.0.51"
-difference = "2.0.0"
 cargo-witgen = { path = "crates/cargo_witgen", version = "0.14" }
 k9 = "0.11.5"
 

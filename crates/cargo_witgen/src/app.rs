@@ -1,6 +1,9 @@
 use anyhow::{bail, Context, Result};
+// use cargo_metadata::DependencyKind;
 use clap::{Args, Parser, Subcommand};
+use clap_cargo_extra::ClapCargo;
 use std::{
+    env,
     fs::{read, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
@@ -42,20 +45,37 @@ pub struct Witgen {
     pub output: PathBuf,
 
     /// Specify prefix file to copy into top of the generated wit file
-    #[clap(long, short = 'p')]
+    #[clap(long, short = 'b')]
     pub prefix_file: Vec<PathBuf>,
 
     /// Specify prefix string to copy into top of the generated wit file
     /// `--prefix-string 'use * from "string.wit"'`
-    #[clap(long, short = 's')]
+    #[clap(long, short = 'a')]
     pub prefix_string: Vec<String>,
 
     /// Print results to stdout instead file
     #[clap(long)]
     pub stdout: bool,
+
+    #[clap(flatten)]
+    pub cargo: ClapCargo,
 }
 
 impl Witgen {
+    #[allow(dead_code)]
+    fn gen_from_path(path: &Path) -> Result<String> {
+        let witgen = Witgen {
+            input: None,
+            input_dir: path.to_path_buf(),
+            output: PathBuf::new(),
+            prefix_file: vec![],
+            prefix_string: vec![],
+            stdout: false,
+            cargo: ClapCargo::default(),
+        };
+        witgen.generate_str(witgen.read_input()?)
+    }
+
     pub fn read_input(&self) -> Result<File> {
         // TODO: figure out how to avoid the clone()
         let input = self
