@@ -115,6 +115,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 syn::Fields::Named(_named) => {
                     let fields = gen_fields(_named.named.iter().collect())?.join(",\n");
                     let inner_type_name = &format!("{}-{}", enm_name, ident);
+                    let comment =  get_doc_comment(&variant.attrs, 0)?;
                     let comment = comment.as_deref().unwrap_or_default();
                     named_types.push_str(&format!(
                         "{}record {} {{\n{}\n}}\n",
@@ -140,8 +141,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 }
                 syn::Fields::Unit => Ok(ident),
             };
-            let comment = comment.unwrap_or_default();
-            variant_string.map(|v| format!("{}  {},", comment, v))
+            variant_string.map(|v| format!("{}  {},", comment.unwrap_or_default(), v))
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n");
@@ -154,7 +154,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         ty, enm_name, variants
     );
 
-    Ok(format!("{}\n{}", content, named_types))
+    Ok(format!("{}{}", content, named_types))
 }
 
 /// Generate a wit function
@@ -248,7 +248,7 @@ pub(crate) fn get_doc_comment(attrs: &[Attribute], depth: usize) -> Result<Optio
                 if let Lit::Str(lit_str) = &name_val.lit {
                     writeln!(
                         &mut comment,
-                        "{}/// {}",
+                        "{}///{}",
                         " ".repeat(depth * 2),
                         lit_str.value()
                     )?;

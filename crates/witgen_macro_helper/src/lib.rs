@@ -25,6 +25,35 @@ pub fn parse_tokens(tokens: proc_macro2::TokenStream) -> Result<Wit> {
     tokens.try_into()
 }
 
+pub fn resolve_wit_file(root: &Path, name: &str) -> Result<(PathBuf, String)> {
+    let wit = root.join(name).with_extension("wit");
+
+    // Attempt to read a ".wit" file.
+    match fs::read_to_string(&wit) {
+        Ok(contents) => Ok((wit, contents)),
+
+        // If no such file was found, attempt to read a ".wit.md" file.
+        Err(err) if err.kind() == std::io::ErrorKind::NotFound => {
+            let wit_md = wit.with_extension("wit.md");
+            match fs::read_to_string(&wit_md) {
+                Ok(contents) => Ok((wit_md, contents)),
+                Err(_err) => Err(err.into()),
+            }
+        }
+
+        Err(err) => return Err(err.into()),
+    }
+}
+
+pub fn resolve_wit_files(root_paths: &[PathBuf], name: &str) -> Result<(PathBuf, String)> {
+    for path in root_paths {
+        if let Ok(res) = resolve_wit_file(path, name) {
+            return Ok(res);
+        }
+    }
+    bail!("Failed to resolve {name}")
+}
+
 /// Read a crate starting from a single file then parse into a file
 pub fn parse_crate_as_file(path: &Path) -> Result<File> {
     if let Ok(file) = read_full_crate_source_code(path, |_| Ok(false)) {

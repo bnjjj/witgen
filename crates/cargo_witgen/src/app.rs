@@ -96,15 +96,16 @@ impl Witgen {
 
     pub fn generate_str(&self, file: File) -> Result<String> {
         let wit: Wit = file.into();
-        let mut wit_str = format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
-        wit_str.push_str(&self.prefix_string.join("\n"));
-        wit_str.push('\n');
+        let mut wit_str = String::new(); //format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+        if !self.prefix_string.is_empty() {
+            wit_str.push_str(&self.prefix_string.join("\n"));
+            wit_str.push('\n');
+        }
         for path in &self.prefix_file {
             let prefix_file = String::from_utf8(read(path)?)?;
-            wit_str.push_str(&format!("{}\n\n", prefix_file));
+            wit_str.push_str(&format!("{}\n", prefix_file));
         }
         wit_str.push_str(&wit.to_string());
-
         Ok(wit_str)
     }
 
