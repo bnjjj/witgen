@@ -83,7 +83,7 @@ pub trait Resolver {
     }
 
     fn parse_wit_interface_default(name: &str, wit_source: &str) -> Result<Interface> {
-      Empty{}.parse_wit_interface(name, wit_source)
+      DefaultResolver{}.parse_wit_interface(name, wit_source)
     }
 }
 
@@ -97,6 +97,6 @@ pub fn parse_interface_from_wit<R: Resolver>(
     })
 }
 
-struct Empty;
+pub struct DefaultResolver;
 
-impl Resolver for Empty{}
+impl Resolver for DefaultResolver{}

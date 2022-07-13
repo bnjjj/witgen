@@ -3,9 +3,9 @@ use std::{fs::read, path::PathBuf};
 
 use anyhow::Result;
 use cargo_witgen::Witgen;
-// use wit_parser::Interface;
-use k9::assert_equal;
-use witgen_macro_helper::{parse_interface_from_wit, Resolver, Wit};
+use wit_parser::Interface;
+use k9::{assert_matches_snapshot};
+use witgen_macro_helper::{DefaultResolver, Wit, Resolver};
 
 // struct Empty;
 
@@ -18,7 +18,7 @@ fn parse_str(s: &str) -> Result<String> {
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {
-    Resolver::parse_wit_interface_default("a", s)
+    DefaultResolver::parse_wit_interface_default("a", s)
 }
 
 // fn parse_wit_str_with_path(s: &str) -> Result<Interface> {
