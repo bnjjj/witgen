@@ -3,18 +3,27 @@ use std::{fs::read, path::PathBuf};
 
 use anyhow::Result;
 use cargo_witgen::Witgen;
-use difference::assert_diff;
-use wit_parser::Interface;
-use witgen_macro_helper::Wit;
+// use wit_parser::Interface;
 use k9::assert_equal;
+use witgen_macro_helper::{parse_interface_from_wit, Resolver, Wit};
+
+// struct Empty;
+
+// impl Resolve for Empty {
+
+// }
 
 fn parse_str(s: &str) -> Result<String> {
     Wit::from_str(s).map(|wit| wit.to_string())
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {
-    Interface::parse("a", s)
+    Resolver::parse_wit_interface_default("a", s)
 }
+
+// fn parse_wit_str_with_path(s: &str) -> Result<Interface> {
+//   Interface::parse_with("a", s, |path| resolve_wit_ )
+// }
 
 fn parse(s: &str) {
     let res = parse_str(s).expect(s);
@@ -54,8 +63,10 @@ fn test_diff() {
         prefix_string: vec![],
         stdout: false,
         input: None,
+        cargo: Default::default(),
+        skip_resolve: false,
     };
-    
+
     let wit = witgen.generate_str(witgen.read_input().unwrap()).unwrap();
     parse_wit_str(&wit).expect("Failed to parse example file");
     let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
