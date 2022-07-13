@@ -17,7 +17,7 @@ categories = ["command-line-interface", "command-line-interface", "wasm"]
 [dependencies]
 # CLI
 clap = {version = "3.0", default-features = false, features = ["derive", "std"]}
-clap-cargo-extra = { path = "../../../clap-cargo-extra" }
+clap-cargo-extra = "0.1.0"
 
 ## current project
 witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.14" }
