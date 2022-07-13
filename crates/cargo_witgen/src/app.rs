@@ -9,7 +9,7 @@ use std::{
     path::{Path, PathBuf},
 };
 use syn::File;
-use witgen_macro_helper::{parse_crate_as_file, parse_interface_from_wit, Resolver, Wit};
+use witgen_macro_helper::{parse_crate_as_file, Resolver, Wit};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -120,7 +120,7 @@ impl Witgen {
 
     pub fn resolve_wit(&self, wit_str: &str) -> Result<HashMap<String, String>> {
         let mut resolver = WitResolver::new(&self.cargo);
-        let _ = self.parse_wit_str(
+        let _ = resolver.parse_wit_interface(
             self.output.to_str().expect("failed to decode output"),
             &wit_str,
         )?;
