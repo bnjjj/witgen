@@ -62,6 +62,10 @@ pub struct Witgen {
     #[clap(long)]
     pub skip_resolve: bool,
 
+    /// Skip adding prologue to file
+    #[clap(long)]
+    pub skip_prologue: bool,
+
     #[clap(flatten)]
     pub cargo: ClapCargo,
 }
@@ -77,6 +81,7 @@ impl Witgen {
             stdout: false,
             cargo: ClapCargo::default(),
             skip_resolve: false,
+            skip_prologue: true,
         }
     }
 
@@ -107,7 +112,11 @@ impl Witgen {
 
     pub fn generate_str(&self, file: File) -> Result<String> {
         let wit: Wit = file.into();
-        let mut wit_str = String::new(); //format!("// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"));
+        let mut wit_str = if self.skip_prologue {
+            String::new()
+        } else {
+            format!("// auto-generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v{}) \n\n", env!("CARGO_PKG_VERSION"))
+        };
         if !self.prefix_string.is_empty() {
             wit_str.push_str(&self.prefix_string.join("\n"));
             wit_str.push('\n');
