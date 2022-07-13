@@ -1,11 +1,11 @@
+use std::path::PathBuf;
 use std::str::FromStr;
-use std::{fs::read, path::PathBuf};
 
 use anyhow::Result;
 use cargo_witgen::Witgen;
+use k9::assert_matches_snapshot;
 use wit_parser::Interface;
-use k9::{assert_matches_snapshot};
-use witgen_macro_helper::{DefaultResolver, Wit, Resolver};
+use witgen_macro_helper::{DefaultResolver, Resolver, Wit};
 
 // struct Empty;
 
@@ -56,21 +56,8 @@ enum MyEnum {
 
 #[test]
 fn test_diff() -> Result<()> {
-    let witgen = Witgen {
-        input_dir: PathBuf::from(&"examples/my_witgen_example"),
-        output: PathBuf::from(&"index.wit"),
-        prefix_file: vec![],
-        prefix_string: vec![],
-        stdout: false,
-        input: None,
-        cargo: Default::default(),
-        skip_resolve: false,
-    };
-
-    let wit = witgen.generate_str(witgen.read_input()?)?;
-    let wit = witgen.resolve(&wit)?;
+    let wit = Witgen::gen_static_from_path(&PathBuf::from(&"examples/my_witgen_example"))?;
     assert_matches_snapshot!(wit);
-    // assert_equal!(file_str, wit);
     Ok(())
 }
 

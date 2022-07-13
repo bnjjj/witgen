@@ -41,7 +41,7 @@ pub fn resolve_wit_file(root: &Path, name: &str) -> Result<(PathBuf, String)> {
             }
         }
 
-        Err(err) => return Err(err.into()),
+        Err(err) => Err(err.into()),
     }
 }
 
@@ -83,7 +83,8 @@ pub trait Resolver {
     }
 
     fn parse_wit_interface_default(name: &str, wit_source: &str) -> Result<Interface> {
-      DefaultResolver{}.parse_wit_interface(name, wit_source)
+        println!("name: {name}");
+        DefaultResolver {}.parse_wit_interface(name, wit_source)
     }
 }
 
@@ -99,4 +100,4 @@ pub fn parse_interface_from_wit<R: Resolver>(
 
 pub struct DefaultResolver;
 
-impl Resolver for DefaultResolver{}
+impl Resolver for DefaultResolver {}

@@ -115,12 +115,13 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 syn::Fields::Named(_named) => {
                     let fields = gen_fields(_named.named.iter().collect())?.join(",\n");
                     let inner_type_name = &format!("{}-{}", enm_name, ident);
-                    let comment =  get_doc_comment(&variant.attrs, 0)?;
+                    let comment = get_doc_comment(&variant.attrs, 0)?;
                     let comment = comment.as_deref().unwrap_or_default();
-                    named_types.push_str(&format!(
+                    write!(
+                        &mut named_types,
                         "{}record {} {{\n{}\n}}\n",
                         comment, inner_type_name, fields
-                    ));
+                    )?;
                     Ok(format!("{}({})", ident, inner_type_name))
                 }
                 syn::Fields::Unnamed(unamed) => {
@@ -281,10 +282,11 @@ pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {
             TraitItem::Const(_) => todo!("Const in Trait isn't implemented yet"),
             TraitItem::Method(method) => {
                 let comment = get_doc_comment(&method.attrs, 1)?.unwrap_or_default();
-                res.push_str(&format!(
+                write!(
+                    &mut res,
                     "{comment}  {}",
                     gen_wit_function_from_signature(&method.sig)?
-                ))
+                )?
             }
             TraitItem::Type(_) => todo!("Type in Trait isn't implemented yet"),
             TraitItem::Macro(_) => todo!("Macro in Trait isn't implemented yet"),

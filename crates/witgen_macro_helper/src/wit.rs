@@ -2,7 +2,7 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_import, gen_wit_trait, gen_wit_struct,
+    gen_wit_enum, gen_wit_function, gen_wit_import, gen_wit_struct, gen_wit_trait,
     gen_wit_type_alias, get_doc_comment,
 };
 use anyhow::{bail, Result};

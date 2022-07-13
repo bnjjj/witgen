@@ -1,6 +1,6 @@
 #![allow(dead_code, unused_variables)]
-use std::collections::HashMap;
 use example_dep::SampleResource;
+use std::collections::HashMap;
 use witgen::witgen;
 
 #[witgen]
@@ -142,6 +142,4 @@ trait ExampleResource {
     fn f(w: WithNamedFields) -> TestEnum;
 }
 
-impl SampleResource for InitArgs {
-  
-}
+impl SampleResource for InitArgs {}

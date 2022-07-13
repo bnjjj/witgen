@@ -4,6 +4,7 @@ use clap_cargo_extra::ClapCargo;
 use regex::Regex;
 use std::{
     collections::HashMap,
+    // fmt::Write,
     fs::{read, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
@@ -66,19 +67,29 @@ pub struct Witgen {
 }
 
 impl Witgen {
-    #[allow(dead_code)]
-    fn gen_from_path(path: &Path) -> Result<String> {
-        let witgen = Witgen {
+    pub fn from_path(path: &Path) -> Self {
+        Self {
             input: None,
             input_dir: path.to_path_buf(),
-            output: PathBuf::new(),
+            output: PathBuf::from("index.wit"),
             prefix_file: vec![],
             prefix_string: vec![],
             stdout: false,
             cargo: ClapCargo::default(),
             skip_resolve: false,
-        };
+        }
+    }
+
+    pub fn gen_from_path(path: &Path) -> Result<String> {
+        let witgen = Witgen::from_path(path);
         witgen.generate_str(witgen.read_input()?)
+    }
+
+    // Part of extra API but current results in unused warning
+    #[allow(dead_code)]
+    pub fn gen_static_from_path(path: &Path) -> Result<String> {
+        let witgen = Witgen::from_path(path);
+        witgen.resolve(&witgen.generate_str(witgen.read_input()?)?)
     }
 
     pub fn read_input(&self) -> Result<File> {
@@ -103,7 +114,8 @@ impl Witgen {
         }
         for path in &self.prefix_file {
             let prefix_file = String::from_utf8(read(path)?)?;
-            wit_str.push_str(&format!("{}\n", prefix_file));
+            wit_str.push_str(&prefix_file);
+            wit_str.push('\n');
         }
         wit_str.push_str(&wit.to_string());
         Ok(wit_str)
@@ -120,9 +132,10 @@ impl Witgen {
 
     pub fn resolve_wit(&self, wit_str: &str) -> Result<HashMap<String, String>> {
         let mut resolver = WitResolver::new(&self.cargo);
+        println!("here");
         let _ = resolver.parse_wit_interface(
             self.output.to_str().expect("failed to decode output"),
-            &wit_str,
+            wit_str,
         )?;
         Ok(resolver.wit_generated)
     }
@@ -136,16 +149,16 @@ impl Witgen {
         self.write_output(&wit_str)
     }
 
-    pub fn resolve(&self, wit_str: &String) -> Result<String> {
+    pub fn resolve(&self, wit_str: &str) -> Result<String> {
         let dep_wit = self
-            .resolve_wit(&wit_str)?
+            .resolve_wit(wit_str)?
             .into_values()
             .collect::<Vec<String>>()
             .join("\n");
 
         // remove `use` from file since combining
         let re = Regex::new(r"^use .+\n").unwrap();
-        let mut res = re.replace_all(&wit_str, "").to_string();
+        let mut res = re.replace_all(wit_str, "").to_string();
         res.push_str(&dep_wit);
         Ok(res)
     }
@@ -170,10 +183,10 @@ impl Resolver for WitResolver<'_> {
         let manifest_dir = self.cargo.find_package(name)?.map_or_else(
             || bail!("Failed to find {name}"),
             |p| {
-                p.manifest_path.as_std_path().parent().map_or_else(
-                    || bail!("failed to find parent of {}", p.manifest_path),
-                    |p| Ok(p),
-                )
+                p.manifest_path
+                    .as_std_path()
+                    .parent()
+                    .map_or_else(|| bail!("failed to find parent of {}", p.manifest_path), Ok)
             },
         )?;
 
