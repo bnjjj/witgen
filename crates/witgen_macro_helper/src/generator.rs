@@ -268,12 +268,13 @@ pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
         UseTree::Glob(_) => todo!(),
         UseTree::Group(_) => todo!(),
     };
+    // Todo allow referencing specific items
     Ok(format!("use * from {import_name}"))
 }
 
-pub fn gen_wit_interface(trait_: &ItemTrait) -> Result<String> {
+pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {
     let name = gen_wit_ident(&trait_.ident);
-    let mut res = format!("interface {name} {{\n");
+    let mut res = format!("resource {name} {{\n");
 
     for item in trait_.items.iter() {
         match item {

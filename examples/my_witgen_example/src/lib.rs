@@ -1,5 +1,6 @@
 #![allow(dead_code, unused_variables)]
 use std::collections::HashMap;
+use example_dep::SampleResource;
 use witgen::witgen;
 
 #[witgen]
@@ -7,9 +8,6 @@ use example_dep::ExternalDep;
 
 mod extra_type;
 use extra_type::*;
-
-
-
 
 #[witgen]
 enum Colors {
@@ -136,10 +134,14 @@ pub fn use_ext_dep() -> ExternalDep {
 
 /// This is an example wit interface
 #[witgen]
-trait ExampleInterface {
-  fn foo() -> String;
+trait ExampleResource {
+    fn foo() -> String;
 
-  /// Has doc string
-  /// With two lines
-  fn f(w: WithNamedFields) -> TestEnum;
+    /// Has doc string
+    /// With two lines
+    fn f(w: WithNamedFields) -> TestEnum;
+}
+
+impl SampleResource for InitArgs {
+  
 }

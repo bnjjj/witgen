@@ -1,7 +1,3 @@
-// This is a generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.14.0) 
-
-
-use * from example-dep
 type string-alias = string
 
 type private-type = list<float32>
@@ -14,30 +10,27 @@ enum colors {
   blue,
 }
 
-
 variant my-enum {
   unit-type,
   tuple-variant(tuple<string, s32>),
 }
 
-
 variant with-named-fields {
-  ///  Example variant with named fields
+  /// Example variant with named fields
   example(with-named-fields-example),
   unit-type,
   a-tuple(string),
-  ///  Example of a big named field
+  /// Example of a big named field
   big-example(with-named-fields-big-example),
 }
-
-  ///  Example variant with named fields
+/// Example variant with named fields
 record with-named-fields-example {
-  ///  Doc for inner string
+  /// Doc for inner string
   name: string
 }
-  ///  Example of a big named field
+/// Example of a big named field
 record with-named-fields-big-example {
-  ///  Info about field
+  /// Info about field
   field: u32,
   b: bool,
   s: string,
@@ -62,31 +55,30 @@ test-option: func(other: list<u8>, number: u8, othernum: s32) -> option<tuple<st
 
 test-result: func(other: list<u8>, number: u8, othernum: s32) -> expected<tuple<string, u64>, string>
 
-///  Here is a doc example to generate in wit file
+/// Here is a doc example to generate in wit file
 record test-bis {
   coucou: string,
   btes: list<u8>
 }
 
-///  Documentation over struct
-///  in multi-line
+/// Documentation over struct
+/// in multi-line
 type test-tuple = tuple<u64, string>
 
 record test-struct {
-  ///  Doc comment over inner field in struct
+  /// Doc comment over inner field in struct
   inner: string
 }
 
-///  Documentation over enum
+/// Documentation over enum
 variant test-enum {
-  ///  Doc comment over UnitType variant in struct
-  ///  Two lines
+  /// Doc comment over UnitType variant in struct
+  /// Two lines
   unit-type,
   number(u64),
-  ///  Doc comment over String variant in struct
+  /// Doc comment over String variant in struct
   string-variant(string),
 }
-
 
 test-tuple: func(other: list<u8>, test-struct: test-struct, other-enum: test-enum) -> tuple<string, s64>
 
@@ -102,10 +94,17 @@ type float64-bit = float64
 
 use-ext-dep: func() -> external-dep
 
-///  This is an example wit interface
-Interface ExampleInterface {
+/// This is an example wit interface
+resource example-resource {
   foo: func() -> string
-  ///  Has doc string
-  ///  With two lines
+  /// Has doc string
+  /// With two lines
   f: func(w: with-named-fields) -> test-enum
-}}
+}
+/// Example of an external dependency
+type external-dep = string
+
+/// Example Interface
+resource sample-resource {
+  foo: func() -> string
+}

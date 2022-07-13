@@ -2,14 +2,15 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, get_doc_comment, gen_wit_import, gen_wit_interface,
+    gen_wit_enum, gen_wit_function, gen_wit_import, gen_wit_trait, gen_wit_struct,
+    gen_wit_type_alias, get_doc_comment,
 };
 use anyhow::{bail, Result};
 use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
-    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference, ItemUse, ItemTrait,
+    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemTrait,
+    ItemType, ItemUse, Type as SynType, TypeReference,
 };
 // use wit_parser::Interface;
 
@@ -21,7 +22,7 @@ pub enum Wit {
     Variant(ItemEnum),
     Type(ItemType),
     Use(ItemUse),
-    Interface(ItemTrait)
+    Resource(ItemTrait),
 }
 
 impl Wit {
@@ -40,7 +41,7 @@ impl Wit {
             Wit::Type(item) => Some(&item.attrs),
             Wit::Mod(_, attrs) => Some(attrs),
             Wit::Use(item) => Some(&item.attrs),
-            Wit::Interface(item) => Some(&item.attrs),
+            Wit::Resource(item) => Some(&item.attrs),
         }
     }
 
@@ -90,7 +91,7 @@ impl TryFrom<Item> for Wit {
             Item::Struct(item) => Wit::Record(item),
             Item::Type(item) => Wit::Type(item),
             Item::Use(item) => Wit::Use(item),
-            Item::Trait(item) => Wit::Interface(item),
+            Item::Trait(item) => Wit::Resource(item),
             Item::Mod(ItemMod {
                 content: Some((_, items)),
                 attrs,
@@ -149,8 +150,8 @@ impl Display for Wit {
             Wit::Function(item) => gen_wit_function(item),
             Wit::Variant(item) => gen_wit_enum(item),
             Wit::Type(item) => gen_wit_type_alias(item),
-            Wit::Use(item) =>  gen_wit_import(item),
-            Wit::Interface(item) => gen_wit_interface(item),
+            Wit::Use(item) => gen_wit_import(item),
+            Wit::Resource(item) => gen_wit_trait(item),
         }
         .unwrap_or_default();
         write!(f, "{doc}{wit_str}")
