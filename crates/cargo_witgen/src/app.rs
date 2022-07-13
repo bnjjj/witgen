@@ -1,15 +1,15 @@
 use anyhow::{bail, Context, Result};
-// use cargo_metadata::DependencyKind;
 use clap::{Args, Parser, Subcommand};
 use clap_cargo_extra::ClapCargo;
+use regex::Regex;
 use std::{
-    env,
+    collections::HashMap,
     fs::{read, OpenOptions},
     io::Write,
     path::{Path, PathBuf},
 };
 use syn::File;
-use witgen_macro_helper::{parse_crate_as_file, Wit};
+use witgen_macro_helper::{parse_crate_as_file, parse_interface_from_wit, Resolver, Wit};
 
 #[derive(Parser, Debug)]
 #[clap(
@@ -57,6 +57,10 @@ pub struct Witgen {
     #[clap(long)]
     pub stdout: bool,
 
+    /// Do not resolve the `use` references in generated wit file to combine into one
+    #[clap(long)]
+    pub skip_resolve: bool,
+
     #[clap(flatten)]
     pub cargo: ClapCargo,
 }
@@ -72,6 +76,7 @@ impl Witgen {
             prefix_string: vec![],
             stdout: false,
             cargo: ClapCargo::default(),
+            skip_resolve: false,
         };
         witgen.generate_str(witgen.read_input()?)
     }
@@ -112,10 +117,68 @@ impl Witgen {
         Ok(())
     }
 
+    pub fn resolve_wit(&self, wit_str: &str) -> Result<HashMap<String, String>> {
+        let mut resolver = WitResolver::new(&self.cargo);
+        let _ = self.parse_wit_str(
+            self.output.to_str().expect("failed to decode output"),
+            &wit_str,
+        )?;
+        Ok(resolver.wit_generated)
+    }
+
     pub fn run(&self) -> Result<()> {
         let input = self.read_input()?;
-        let wit_str = self.generate_str(input)?;
+        let mut wit_str = self.generate_str(input)?;
+        if !self.skip_resolve {
+            wit_str = self.resolve(&wit_str)?;
+        }
         self.write_output(&wit_str)
+    }
+
+    pub fn resolve(&self, wit_str: &String) -> Result<String> {
+        let dep_wit = self
+            .resolve_wit(&wit_str)?
+            .into_values()
+            .collect::<Vec<String>>()
+            .join("\n");
+
+        // remove `use` from file since combining
+        let re = Regex::new(r"^use .+\n").unwrap();
+        let mut res = re.replace_all(&wit_str, "").to_string();
+        res.push_str(&dep_wit);
+        Ok(res)
+    }
+}
+
+struct WitResolver<'a> {
+    cargo: &'a ClapCargo,
+    wit_generated: HashMap<String, String>,
+}
+
+impl<'a> WitResolver<'a> {
+    fn new(cargo: &'a ClapCargo) -> Self {
+        Self {
+            cargo,
+            wit_generated: Default::default(),
+        }
+    }
+}
+
+impl Resolver for WitResolver<'_> {
+    fn resolve_name(&mut self, name: &str) -> Result<String> {
+        let manifest_dir = self.cargo.find_package(name)?.map_or_else(
+            || bail!("Failed to find {name}"),
+            |p| {
+                p.manifest_path.as_std_path().parent().map_or_else(
+                    || bail!("failed to find parent of {}", p.manifest_path),
+                    |p| Ok(p),
+                )
+            },
+        )?;
+
+        let res = Witgen::gen_from_path(manifest_dir)?;
+        self.wit_generated.insert(name.to_string(), res.clone());
+        Ok(res)
     }
 }
 
