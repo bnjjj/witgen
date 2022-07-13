@@ -55,7 +55,7 @@ enum MyEnum {
 }
 
 #[test]
-fn test_diff() {
+fn test_diff() -> Result<()> {
     let witgen = Witgen {
         input_dir: PathBuf::from(&"examples/my_witgen_example"),
         output: PathBuf::from(&"index.wit"),
@@ -67,11 +67,11 @@ fn test_diff() {
         skip_resolve: false,
     };
 
-    let wit = witgen.generate_str(witgen.read_input().unwrap()).unwrap();
-    parse_wit_str(&wit).expect("Failed to parse example file");
-    let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
-    let file_str = String::from_utf8(read(path).unwrap()).unwrap();
-    assert_equal!(file_str, wit);
+    let wit = witgen.generate_str(witgen.read_input()?)?;
+    let wit = witgen.resolve(&wit)?;
+    assert_matches_snapshot!(wit);
+    // assert_equal!(file_str, wit);
+    Ok(())
 }
 
 #[test]
