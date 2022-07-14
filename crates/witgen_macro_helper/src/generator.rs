@@ -274,17 +274,17 @@ pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
 }
 
 pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {
-    let name = gen_wit_ident(&trait_.ident);
-    let mut res = format!("resource {name} {{\n");
+    let name = gen_wit_ident(&trait_.ident)?;
+    let mut res = format!("interface {name} {{\n");
 
     for item in trait_.items.iter() {
         match item {
             TraitItem::Const(_) => todo!("Const in Trait isn't implemented yet"),
             TraitItem::Method(method) => {
-                let comment = get_doc_comment(&method.attrs, 1)?.unwrap_or_default();
+                let comment = get_doc_comment(&method.attrs, 1)?;
                 write!(
                     &mut res,
-                    "{comment}  {}",
+                    "{comment}{}",
                     gen_wit_function_from_signature(&method.sig)?
                 )?
             }
@@ -300,4 +300,29 @@ pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {
 
 fn gen_wit_ident(ident: &Ident) -> String {
     ident.to_string().to_kebab_case()
+pub fn gen_wit_impl(impl_: &ItemImpl) -> Result<String> {
+    let name = gen_wit_ident(&impl_.self_ty.to_wit()?)?;
+    let comment = get_doc_comment(&impl_.attrs, 0)?;
+    let mut res = format!("{comment}resource {name} {{\n");
+
+    for item in impl_.items.iter() {
+        match item {
+            ImplItem::Const(_) => todo!("Const in Impl isn't implemented yet"),
+            ImplItem::Method(method) => {
+                let comment = get_doc_comment(&method.attrs, 1)?;
+                write!(
+                    &mut res,
+                    "{comment}{}",
+                    gen_wit_function_from_signature(&method.sig)?
+                )?
+            }
+            ImplItem::Type(_) => todo!("Type in Impl isn't implemented yet"),
+            ImplItem::Macro(_) => todo!("Macro in Impl isn't implemented yet"),
+            ImplItem::Verbatim(_) => todo!("Verbatim in Impl isn't implemented yet"),
+            _ => todo!("extra case in Impl isn't implemented yet"),
+        }
+    }
+    res.push_str("}\n");
+    Ok(res)
 }
+
