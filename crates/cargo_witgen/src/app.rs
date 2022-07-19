@@ -141,7 +141,6 @@ impl Witgen {
 
     pub fn resolve_wit(&self, wit_str: &str) -> Result<HashMap<String, String>> {
         let mut resolver = WitResolver::new(&self.cargo);
-        println!("here");
         let _ = resolver.parse_wit_interface(
             self.output.to_str().expect("failed to decode output"),
             wit_str,
