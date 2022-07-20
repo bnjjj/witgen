@@ -1,7 +1,18 @@
+// auto-generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.14.0) 
+
 /// Example of an external dependency
 type external-dep = string
 
 /// Example Interface
 resource sample-resource {
+  /// Can handle static methods
+  static faa: func()
+  ///Can add special comments
+  ///@payable
   foo: func() -> string
+  /// Can indicate if mutable
+  ///@mutable
+  f: func() -> tuple<>
 }
+
+faa: func()

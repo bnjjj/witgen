@@ -1,5 +1,4 @@
 #![allow(dead_code, unused_variables)]
-use example_dep::SampleResource;
 use std::collections::HashMap;
 use witgen::witgen;
 
@@ -132,14 +131,22 @@ pub fn use_ext_dep() -> ExternalDep {
     String::from("hello")
 }
 
+struct ExampleResource {}
+
 /// This is an example wit interface
 #[witgen]
-trait ExampleResource {
-    fn foo() -> String;
+impl ExampleResource {
+    fn foo() -> String {
+        todo!()
+    }
 
     /// Has doc string
     /// With two lines
-    fn f(w: WithNamedFields) -> TestEnum;
-}
+    pub fn f(&self, w: WithNamedFields) -> TestEnum {
+        todo!()
+    }
 
-impl SampleResource for InitArgs {}
+    pub fn fee(&mut self, w: WithNamedFields) -> TestEnum {
+        todo!()
+    }
+}
