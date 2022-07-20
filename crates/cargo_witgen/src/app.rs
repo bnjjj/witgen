@@ -189,12 +189,14 @@ impl<'a> WitResolver<'a> {
 
 impl Resolver for WitResolver<'_> {
     fn resolve_name(&mut self, name: &str) -> Result<String> {
-        // TODO: Handle package names that have hyphen. e.g. `near_sdk` --> `near-sdk`
-        // let mut package = ;
         let package = self
             .cargo
             .find_package(name)?
-            .or_else(|| self.cargo.find_package(&name.to_kebab_case()).unwrap_or(None))
+            .or_else(|| {
+                self.cargo
+                    .find_package(&name.to_kebab_case())
+                    .unwrap_or(None)
+            })
             .map_or_else(|| bail!("Failed to find {name}"), Ok)?;
 
         let manifest_dir = package.manifest_path.as_std_path().parent().map_or_else(

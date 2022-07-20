@@ -16,8 +16,8 @@ pub use wit_parser::Interface;
 pub mod generator;
 mod wit;
 pub use wit::Wit;
-pub mod visitor;
 mod util;
+pub mod visitor;
 
 /// Convence function for
 /// ```

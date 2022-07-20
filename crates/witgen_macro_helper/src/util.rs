@@ -1,8 +1,8 @@
 use std::fmt::Display;
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use heck::ToKebabCase;
-use syn::{FnArg, PatType, Signature, ReturnType, Type, ImplItemMethod, ImplItem, Visibility};
+use syn::{FnArg, ImplItem, ImplItemMethod, PatType, ReturnType, Signature, Type, Visibility};
 
 use crate::wit::ToWitType;
 
@@ -73,67 +73,64 @@ impl SignatureUtils for Signature {
     }
 }
 
-
 pub fn wit_ident<T: Display + ?Sized>(ident: &T) -> Result<String> {
-  is_known_keyword(ident.to_string().to_kebab_case())
+    is_known_keyword(ident.to_string().to_kebab_case())
 }
-
 
 pub(crate) fn is_known_keyword(ident: String) -> Result<String> {
-  if matches!(
-      ident.as_str(),
-      "use"
-          | "type"
-          | "resource"
-          | "func"
-          | "u8"
-          | "u16"
-          | "u32"
-          | "u64"
-          | "s8"
-          | "s16"
-          | "s32"
-          | "s64"
-          | "float32"
-          | "float64"
-          | "char"
-          | "handle"
-          | "record"
-          | "enum"
-          | "flags"
-          | "variant"
-          | "union"
-          | "bool"
-          | "string"
-          | "option"
-          | "list"
-          | "expected"
-          | "_"
-          | "as"
-          | "from"
-          | "static"
-          | "interface"
-          | "tuple"
-          | "async"
-  ) {
-      Err(anyhow::anyhow!(
-          "'{}' is a known keyword you can't use the same identifier",
-          ident
-      ))
-  } else {
-      Ok(ident)
-  }
+    if matches!(
+        ident.as_str(),
+        "use"
+            | "type"
+            | "resource"
+            | "func"
+            | "u8"
+            | "u16"
+            | "u32"
+            | "u64"
+            | "s8"
+            | "s16"
+            | "s32"
+            | "s64"
+            | "float32"
+            | "float64"
+            | "char"
+            | "handle"
+            | "record"
+            | "enum"
+            | "flags"
+            | "variant"
+            | "union"
+            | "bool"
+            | "string"
+            | "option"
+            | "list"
+            | "expected"
+            | "_"
+            | "as"
+            | "from"
+            | "static"
+            | "interface"
+            | "tuple"
+            | "async"
+    ) {
+        Err(anyhow::anyhow!(
+            "'{}' is a known keyword you can't use the same identifier",
+            ident
+        ))
+    } else {
+        Ok(ident)
+    }
 }
 
-
 pub fn pub_method(item: &ImplItem) -> Option<&ImplItemMethod> {
-  match item {
-      ImplItem::Method(
-          method @ ImplItemMethod {
-              vis: Visibility::Public(_),
-              ..
-          },
-      ) => Some(method),
-      _ => None,
-  }
+    match item {
+        ImplItem::Method(
+            method @ ImplItemMethod {
+                vis: Visibility::Public(_),
+                ..
+            },
+        ) => Some(method),
+        _ => None,
+    }
 }
