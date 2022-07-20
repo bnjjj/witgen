@@ -28,6 +28,7 @@ anyhow = "1.0.51"
 ## utils
 syn = { version = "1.0.82", features = ["full", "extra-traits"] }
 regex = "1.6.0"
+heck = "0.4.0"
 
 [lib]
 name = "cargo_witgen"

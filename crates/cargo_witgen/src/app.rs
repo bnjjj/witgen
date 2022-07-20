@@ -1,6 +1,7 @@
 use anyhow::{bail, Context, Result};
 use clap::{Args, Parser, Subcommand};
 use clap_cargo_extra::ClapCargo;
+use heck::ToKebabCase;
 use regex::Regex;
 use std::{
     collections::HashMap,
@@ -188,14 +189,17 @@ impl<'a> WitResolver<'a> {
 
 impl Resolver for WitResolver<'_> {
     fn resolve_name(&mut self, name: &str) -> Result<String> {
-        let manifest_dir = self.cargo.find_package(name)?.map_or_else(
-            || bail!("Failed to find {name}"),
-            |p| {
-                p.manifest_path
-                    .as_std_path()
-                    .parent()
-                    .map_or_else(|| bail!("failed to find parent of {}", p.manifest_path), Ok)
-            },
+        // TODO: Handle package names that have hyphen. e.g. `near_sdk` --> `near-sdk`
+        // let mut package = ;
+        let package = self
+            .cargo
+            .find_package(name)?
+            .or_else(|| self.cargo.find_package(&name.to_kebab_case()).unwrap_or(None))
+            .map_or_else(|| bail!("Failed to find {name}"), Ok)?;
+
+        let manifest_dir = package.manifest_path.as_std_path().parent().map_or_else(
+            || bail!("failed to find parent of {}", package.manifest_path),
+            Ok,
         )?;
 
         let res = Witgen::gen_from_path(manifest_dir)?;
