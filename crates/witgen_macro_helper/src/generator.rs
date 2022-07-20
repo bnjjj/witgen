@@ -32,9 +32,7 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
 
-    let struct_name = gen_wit_ident(&strukt.ident);
-    is_known_keyword(&struct_name)?;
-
+    let struct_name = gen_wit_ident(&strukt.ident)?;
     let is_tuple_struct = strukt.fields.iter().any(|f| f.ident.is_none());
     let fields = gen_fields(strukt.fields.iter().collect::<Vec<&Field>>())?;
     let fields = if is_tuple_struct {
@@ -60,14 +58,12 @@ pub fn gen_wit_struct(strukt: &ItemStruct) -> Result<String> {
 fn gen_fields(iter: Vec<&Field>) -> Result<Vec<String>> {
     iter.into_iter()
         .map(|field| {
-            let field_name = &field
-                .ident
-                .as_ref()
-                .map(gen_wit_ident)
-                .map(|ident| format!("  {ident}: "))
-                .unwrap_or_default();
-            is_known_keyword(field_name)?;
-            let comment = get_doc_comment(&field.attrs, 1)?.unwrap_or_default();
+            let field_name = if let Some(ident) = &field.ident {
+                format!("  {}: ", gen_wit_ident(ident)?)
+            } else {
+                Default::default()
+            };
+            let comment = get_doc_comment(&field.attrs, 1, false)?;
             Ok(format!("{comment}{}{}", field_name, field.ty.to_wit()?))
         })
         .collect()
@@ -96,9 +92,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
 
-    let enm_name = gen_wit_ident(&enm.ident);
-    is_known_keyword(&enm_name)?;
-
+    let enm_name = gen_wit_ident(&enm.ident)?;
     let is_wit_enum = enm
         .variants
         .iter()
@@ -108,15 +102,13 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
         .variants
         .iter()
         .map(|variant| {
-            let ident = gen_wit_ident(&variant.ident);
-            is_known_keyword(&ident)?;
-            let comment = get_doc_comment(&variant.attrs, 1)?;
+            let ident = gen_wit_ident(&variant.ident)?;
+            let comment = get_doc_comment(&variant.attrs, 1, false)?;
             let variant_string = match &variant.fields {
                 syn::Fields::Named(_named) => {
                     let fields = gen_fields(_named.named.iter().collect())?.join(",\n");
                     let inner_type_name = &format!("{}-{}", enm_name, ident);
-                    let comment = get_doc_comment(&variant.attrs, 0)?;
-                    let comment = comment.as_deref().unwrap_or_default();
+                    let comment = get_doc_comment(&variant.attrs, 0, false)?;
                     write!(
                         &mut named_types,
                         "{}record {} {{\n{}\n}}\n",
@@ -142,7 +134,7 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
                 }
                 syn::Fields::Unit => Ok(ident),
             };
-            variant_string.map(|v| format!("{}  {},", comment.unwrap_or_default(), v))
+            variant_string.map(|v| format!("{}  {},", comment, v))
         })
         .collect::<Result<Vec<String>>>()?
         .join("\n");
@@ -235,9 +227,7 @@ pub fn gen_wit_type_alias(type_alias: &ItemType) -> Result<String> {
         bail!("doesn't support generic parameters with witgen");
     }
     let ty = type_alias.ty.to_wit()?;
-    let type_alias_ident = gen_wit_ident(&type_alias.ident);
-    is_known_keyword(&type_alias_ident)?;
-
+    let type_alias_ident = gen_wit_ident(&type_alias.ident)?;
     Ok(format!("type {} = {}\n", type_alias_ident, ty))
 }
 
@@ -263,7 +253,7 @@ pub(crate) fn get_doc_comment(attrs: &[Attribute], depth: usize) -> Result<Optio
 
 pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
     let import_name = match &import.tree {
-        UseTree::Path(UsePath { ident, .. }) => gen_wit_ident(ident),
+        UseTree::Path(UsePath { ident, .. }) => gen_wit_ident(ident)?,
         UseTree::Name(_) => todo!(),
         UseTree::Rename(_) => todo!(),
         UseTree::Glob(_) => todo!(),
@@ -298,8 +288,10 @@ pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {
     Ok(res)
 }
 
-fn gen_wit_ident(ident: &Ident) -> String {
-    ident.to_string().to_kebab_case()
+pub fn gen_wit_ident<T: Display + ?Sized>(ident: &T) -> Result<String> {
+    is_known_keyword(ident.to_string().to_kebab_case())
+}
+
 pub fn gen_wit_impl(impl_: &ItemImpl) -> Result<String> {
     let name = gen_wit_ident(&impl_.self_ty.to_wit()?)?;
     let comment = get_doc_comment(&impl_.attrs, 0)?;

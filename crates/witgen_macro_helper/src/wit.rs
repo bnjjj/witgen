@@ -2,11 +2,10 @@ use std::fmt::Display;
 use std::str::FromStr;
 
 use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_impl, gen_wit_import, gen_wit_struct, gen_wit_trait,
-    gen_wit_type_alias, get_doc_comment,
+    gen_wit_enum, gen_wit_function, gen_wit_ident, gen_wit_impl, gen_wit_import, gen_wit_struct,
+    gen_wit_trait, gen_wit_type_alias, get_doc_comment,
 };
 use anyhow::{bail, Result};
-use heck::ToKebabCase;
 use quote::ToTokens;
 use syn::{
     parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemImpl, ItemMod, ItemStruct,
@@ -48,7 +47,7 @@ impl Wit {
     }
 
     pub fn get_doc(&self) -> Result<String> {
-        get_doc_comment(self.attrs().unwrap_or_default(), 0)
+        get_doc_comment(self.attrs().unwrap_or_default(), 0, false)
     }
 
     pub fn validate(self) -> Result<Self> {
@@ -142,7 +141,7 @@ impl TryFrom<&str> for Wit {
 
 impl Display for Wit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let doc = self.get_doc().unwrap_or(None).unwrap_or_default();
+        let doc = self.get_doc().unwrap_or_default();
         let wit_str = match self {
             Wit::Mod(wit, _) => Ok(wit
                 .iter()
@@ -269,12 +268,7 @@ impl ToWitType for SynType {
                             }
                             "f32" => "float32".to_string(),
                             "f64" => "float64".to_string(),
-                            ident => {
-                                let ident_formatted = ident.to_string().to_kebab_case();
-                                is_known_keyword(&ident_formatted)?;
-
-                                ident_formatted
-                            }
+                            ident => gen_wit_ident(ident)?,
                         }
                     }
                 }
@@ -304,9 +298,9 @@ impl ToWitType for SynType {
     }
 }
 
-pub(crate) fn is_known_keyword(ident: &str) -> Result<()> {
+pub(crate) fn is_known_keyword(ident: String) -> Result<String> {
     if matches!(
-        ident,
+        ident.as_str(),
         "use"
             | "type"
             | "resource"
@@ -346,6 +340,6 @@ pub(crate) fn is_known_keyword(ident: &str) -> Result<()> {
             ident
         ))
     } else {
-        Ok(())
+        Ok(ident)
     }
 }
