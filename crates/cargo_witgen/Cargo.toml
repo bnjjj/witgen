@@ -15,13 +15,20 @@ categories = ["command-line-interface", "command-line-interface", "wasm"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-anyhow = "1.0.51"
-cargo_metadata = "0.14.1"
-clap = {version = "=3.1.8", features = ["derive", "cargo"]}
-clap_derive = "=3.1.7"
-witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.13" }
-syn = { version = "1.0.82", features = ["full", "extra-traits"] }
+# CLI
+clap = {version = "3.2", features = ["derive", "cargo"]}
+clap-cargo-extra = "0.1.0"
 
+## current project
+witgen_macro_helper = { path= "../witgen_macro_helper", version = "0.14" }
+
+## errors
+anyhow = "1.0.51"
+
+## utils
+syn = { version = "1.0.82", features = ["full", "extra-traits"] }
+regex = "1.6.0"
+heck = "0.4.0"
 
 [lib]
 name = "cargo_witgen"

@@ -1,15 +1,18 @@
+use anyhow::{bail, Result};
+use quote::ToTokens;
 use std::fmt::Display;
 use std::str::FromStr;
-
-use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_struct, gen_wit_type_alias, get_doc_comment,
-};
-use anyhow::{bail, Result};
-use heck::ToKebabCase;
-use quote::ToTokens;
 use syn::{
-    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemMod, ItemStruct, ItemType,
-    Type as SynType, TypeReference,
+    parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemImpl, ItemMod, ItemStruct,
+    ItemTrait, ItemType, ItemUse, Type as SynType, TypeReference,
+};
+
+use crate::{
+    generator::{
+        gen_wit_enum, gen_wit_function, gen_wit_impl, gen_wit_import, gen_wit_struct,
+        gen_wit_trait, gen_wit_type_alias, get_doc_comment,
+    },
+    util::wit_ident,
 };
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
@@ -19,10 +22,13 @@ pub enum Wit {
     Function(ItemFn),
     Variant(ItemEnum),
     Type(ItemType),
+    Use(ItemUse),
+    Interface(ItemTrait),
+    Resource(ItemImpl),
 }
 
 impl Wit {
-    fn from_items(items: Vec<Item>) -> Vec<Self> {
+    pub(crate) fn from_items(items: Vec<Item>) -> Vec<Self> {
         items
             .into_iter()
             .filter_map(|item| item.try_into().ok())
@@ -36,11 +42,14 @@ impl Wit {
             Wit::Variant(item) => Some(&item.attrs),
             Wit::Type(item) => Some(&item.attrs),
             Wit::Mod(_, attrs) => Some(attrs),
+            Wit::Use(item) => Some(&item.attrs),
+            Wit::Resource(item) => Some(&item.attrs),
+            Wit::Interface(item) => Some(&item.attrs),
         }
     }
 
-    pub fn get_doc(&self) -> Result<Option<String>> {
-        get_doc_comment(self.attrs().unwrap_or_default())
+    pub fn get_doc(&self) -> Result<String> {
+        get_doc_comment(self.attrs().unwrap_or_default(), 0, false)
     }
 
     pub fn validate(self) -> Result<Self> {
@@ -84,6 +93,9 @@ impl TryFrom<Item> for Wit {
             Item::Fn(item) => Wit::Function(item),
             Item::Struct(item) => Wit::Record(item),
             Item::Type(item) => Wit::Type(item),
+            Item::Use(item) => Wit::Use(item),
+            Item::Trait(item) => Wit::Interface(item),
+            Item::Impl(item) => Wit::Resource(item),
             Item::Mod(ItemMod {
                 content: Some((_, items)),
                 attrs,
@@ -131,7 +143,7 @@ impl TryFrom<&str> for Wit {
 
 impl Display for Wit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let doc = self.get_doc().unwrap_or(None).unwrap_or_default();
+        let doc = self.get_doc().unwrap_or_default();
         let wit_str = match self {
             Wit::Mod(wit, _) => Ok(wit
                 .iter()
@@ -142,6 +154,9 @@ impl Display for Wit {
             Wit::Function(item) => gen_wit_function(item),
             Wit::Variant(item) => gen_wit_enum(item),
             Wit::Type(item) => gen_wit_type_alias(item),
+            Wit::Use(item) => gen_wit_import(item),
+            Wit::Resource(item) => gen_wit_impl(item),
+            Wit::Interface(item) => gen_wit_trait(item),
         }
         .unwrap_or_default();
         write!(f, "{doc}{wit_str}")
@@ -255,12 +270,7 @@ impl ToWitType for SynType {
                             }
                             "f32" => "float32".to_string(),
                             "f64" => "float64".to_string(),
-                            ident => {
-                                let ident_formatted = ident.to_string().to_kebab_case();
-                                is_known_keyword(&ident_formatted)?;
-
-                                ident_formatted
-                            }
+                            ident => wit_ident(ident)?,
                         }
                     }
                 }
@@ -287,51 +297,5 @@ impl ToWitType for SynType {
         };
 
         Ok(res)
-    }
-}
-
-pub(crate) fn is_known_keyword(ident: &str) -> Result<()> {
-    if matches!(
-        ident,
-        "use"
-            | "type"
-            | "resource"
-            | "function"
-            | "u8"
-            | "u16"
-            | "u32"
-            | "u64"
-            | "s8"
-            | "s16"
-            | "s32"
-            | "s64"
-            | "float32"
-            | "float64"
-            | "char"
-            | "handle"
-            | "record"
-            | "enum"
-            | "flags"
-            | "variant"
-            | "union"
-            | "bool"
-            | "string"
-            | "option"
-            | "list"
-            | "expected"
-            | "_"
-            | "as"
-            | "from"
-            | "static"
-            | "interface"
-            | "tuple"
-            | "async"
-    ) {
-        Err(anyhow::anyhow!(
-            "'{}' is a known keyword you can't use the same identifier",
-            ident
-        ))
-    } else {
-        Ok(())
     }
 }

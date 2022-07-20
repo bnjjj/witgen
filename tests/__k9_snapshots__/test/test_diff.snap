@@ -1,6 +1,3 @@
-// auto-generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.14.0) 
-
-use * from example-dep
 type string-alias = string
 
 type private-type = list<float32>

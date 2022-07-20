@@ -1,19 +1,29 @@
+use std::path::PathBuf;
 use std::str::FromStr;
-use std::{fs::read, path::PathBuf};
 
 use anyhow::Result;
 use cargo_witgen::Witgen;
-use difference::assert_diff;
+use k9::assert_matches_snapshot;
 use wit_parser::Interface;
-use witgen_macro_helper::Wit;
+use witgen_macro_helper::{DefaultResolver, Resolver, Wit};
+
+// struct Empty;
+
+// impl Resolve for Empty {
+
+// }
 
 fn parse_str(s: &str) -> Result<String> {
     Wit::from_str(s).map(|wit| wit.to_string())
 }
 
 fn parse_wit_str(s: &str) -> Result<Interface> {
-    Interface::parse("a", s)
+    DefaultResolver::parse_wit_interface_default("a", s)
 }
+
+// fn parse_wit_str_with_path(s: &str) -> Result<Interface> {
+//   Interface::parse_with("a", s, |path| resolve_wit_ )
+// }
 
 fn parse(s: &str) {
     let res = parse_str(s).expect(s);
@@ -45,21 +55,10 @@ enum MyEnum {
 }
 
 #[test]
-fn test_diff() {
-    let witgen = Witgen {
-        input_dir: PathBuf::from(&"examples/my_witgen_example"),
-        output: PathBuf::from(&"index.wit"),
-        prefix_file: vec![],
-        prefix_string: vec![],
-        stdout: false,
-        input: None,
-    };
-    
-    let wit = witgen.generate_str(witgen.read_input().unwrap()).unwrap();
-    parse_wit_str(&wit).expect("Failed to parse example file");
-    let path = &PathBuf::from(&"examples/my_witgen_example/index.wit");
-    let file_str = String::from_utf8(read(path).unwrap()).unwrap();
-    assert_diff!(&file_str, &wit, "", 0);
+fn test_diff() -> Result<()> {
+    let wit = Witgen::gen_static_from_path(&PathBuf::from(&"examples/my_witgen_example"))?;
+    assert_matches_snapshot!(wit);
+    Ok(())
 }
 
 #[test]
