@@ -17,6 +17,7 @@ pub mod generator;
 mod wit;
 pub use wit::Wit;
 pub mod visitor;
+mod util;
 
 /// Convence function for
 /// ```
@@ -84,19 +85,8 @@ pub trait Resolver {
     }
 
     fn parse_wit_interface_default(name: &str, wit_source: &str) -> Result<Interface> {
-        println!("name: {name}");
         DefaultResolver {}.parse_wit_interface(name, wit_source)
     }
-}
-
-pub fn parse_interface_from_wit<R: Resolver>(
-    name: &str,
-    wit_source: &str,
-    resolver: &mut R,
-) -> Result<Interface> {
-    Interface::parse_with(name, wit_source, |name| {
-        Ok((name.into(), resolver.resolve_name(name)?))
-    })
 }
 
 pub struct DefaultResolver;

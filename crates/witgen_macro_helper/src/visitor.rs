@@ -12,24 +12,18 @@ impl ImplVisitor {
 
 impl VisitMut for ImplVisitor {
     fn visit_impl_item_method_mut(&mut self, method: &mut ImplItemMethod) {
-        method.attrs.iter_mut().for_each(|attr| {
-            println!("{:#?}", attr);
-            match attr.parse_meta() {
+        method
+            .attrs
+            .iter_mut()
+            .for_each(|attr| match attr.parse_meta() {
                 Ok(Meta::Path(path)) if path.get_ident().is_some() => {
-                    // let ident = path.get_ident().unwrap();
-                    println!("is path? {:#?}", attr);
                     let ident = path.get_ident().unwrap().to_string();
-                    // let ident = quote::format_ident!("\"{ident}\"");
-                    println!("is path? {:#?}", ident);
-                    // let Attribute { path, tokens, .. } = attr;
                     let docs = parse_quote! {
                       #[doc =  #ident]
                     };
                     *attr = docs;
-                    println!("{:#?}", attr);
                 }
                 _ => (),
-            }
-        })
+            })
     }
 }

@@ -1,17 +1,19 @@
-use std::fmt::Display;
-use std::str::FromStr;
-
-use crate::generator::{
-    gen_wit_enum, gen_wit_function, gen_wit_ident, gen_wit_impl, gen_wit_import, gen_wit_struct,
-    gen_wit_trait, gen_wit_type_alias, get_doc_comment,
-};
 use anyhow::{bail, Result};
 use quote::ToTokens;
+use std::fmt::Display;
+use std::str::FromStr;
 use syn::{
     parse2 as parse, Attribute, File, Item, ItemEnum, ItemFn, ItemImpl, ItemMod, ItemStruct,
     ItemTrait, ItemType, ItemUse, Type as SynType, TypeReference,
 };
-// use wit_parser::Interface;
+
+use crate::{
+    generator::{
+        gen_wit_enum, gen_wit_function, gen_wit_impl, gen_wit_import, gen_wit_struct,
+        gen_wit_trait, gen_wit_type_alias, get_doc_comment,
+    },
+    util::wit_ident,
+};
 
 /// Wit type that correspond to Rust Types using `syn`'s representation
 pub enum Wit {
@@ -268,7 +270,7 @@ impl ToWitType for SynType {
                             }
                             "f32" => "float32".to_string(),
                             "f64" => "float64".to_string(),
-                            ident => gen_wit_ident(ident)?,
+                            ident => wit_ident(ident)?,
                         }
                     }
                 }
@@ -295,51 +297,5 @@ impl ToWitType for SynType {
         };
 
         Ok(res)
-    }
-}
-
-pub(crate) fn is_known_keyword(ident: String) -> Result<String> {
-    if matches!(
-        ident.as_str(),
-        "use"
-            | "type"
-            | "resource"
-            | "func"
-            | "u8"
-            | "u16"
-            | "u32"
-            | "u64"
-            | "s8"
-            | "s16"
-            | "s32"
-            | "s64"
-            | "float32"
-            | "float64"
-            | "char"
-            | "handle"
-            | "record"
-            | "enum"
-            | "flags"
-            | "variant"
-            | "union"
-            | "bool"
-            | "string"
-            | "option"
-            | "list"
-            | "expected"
-            | "_"
-            | "as"
-            | "from"
-            | "static"
-            | "interface"
-            | "tuple"
-            | "async"
-    ) {
-        Err(anyhow::anyhow!(
-            "'{}' is a known keyword you can't use the same identifier",
-            ident
-        ))
-    } else {
-        Ok(ident)
     }
 }
