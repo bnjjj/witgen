@@ -3,7 +3,7 @@ use std::fmt::Write;
 use anyhow::{bail, Result};
 use syn::{
     Attribute, Field, Fields, ItemEnum, ItemFn, ItemImpl, ItemStruct, ItemTrait, ItemType, ItemUse,
-    Lit, Signature, TraitItem, UsePath, UseTree,
+    Lit, Signature, TraitItem, UseGroup, UseName, UsePath, UseRename, UseTree,
 };
 
 use crate::{
@@ -230,16 +230,46 @@ pub(crate) fn get_doc_comment(
     Ok(comment)
 }
 
+#[allow(unused_variables, unreachable_code)]
+fn gen_use_names(use_tree: &UseTree) -> Result<String> {
+    let res = match use_tree {
+        UseTree::Path(_) => {
+            todo!("Can only have top level path, e.g. cannot do `use other_crate::module::...`")
+        }
+        UseTree::Name(UseName { ident }) => {
+          todo!("Cannot specify one import must be *. e.g. `use other_crate::Import` --> `use other_crate::*`");
+          wit_ident(&ident)?
+        },
+        UseTree::Rename(UseRename { ident, rename, .. }) => {
+            // TODO: Currently imported types aren't renamed when generated so this is still a todo.
+            todo!("Cannot have renamed imports yet. E.g. `use other_crate::Import as OtherImport`");
+            let (ident, rename) = (wit_ident(ident)?, (wit_ident(rename)?));
+            format!("{ident} as {rename}")
+        }
+        UseTree::Glob(_) => return Ok("*".to_string()),
+        UseTree::Group(UseGroup { items, .. }) => {
+          todo!("Cannot specify group yet. E.g. `use other_crate::{{Import1, Import2}}`");
+          items
+            .iter()
+            .map(gen_use_names)
+            .collect::<Result<Vec<String>>>()?
+            .join(",")},
+    };
+    Ok(format!("{{{res}}}"))
+}
+
 pub fn gen_wit_import(import: &ItemUse) -> Result<String> {
-    let import_name = match &import.tree {
-        UseTree::Path(UsePath { ident, .. }) => wit_ident(ident)?,
-        UseTree::Name(_) => todo!(),
-        UseTree::Rename(_) => todo!(),
-        UseTree::Glob(_) => todo!(),
-        UseTree::Group(_) => todo!(),
+    let (id, use_names) = match &import.tree {
+        UseTree::Path(UsePath { ident, tree, ..  }) => {
+          (wit_ident(ident)?, gen_use_names(tree)?)
+        }
+          ,
+        _ => todo!("Can only use top level 'path', e.g. `use import_crate::*` -> `import_crate`. More specific imports is a TODO."),
     };
     // Todo allow referencing specific items
-    Ok(format!("use * from {import_name}"))
+    let res = format!("use {use_names} from {id}");
+    println!("{res}");
+    Ok(res)
 }
 
 pub fn gen_wit_trait(trait_: &ItemTrait) -> Result<String> {

@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use witgen::witgen;
 
 #[witgen]
-use example_dep::ExternalDep;
+use example_dep::*;
 
 mod extra_type;
 use extra_type::*;
@@ -147,6 +147,10 @@ impl ExampleResource {
     }
 
     pub fn fee(&mut self, w: WithNamedFields) -> TestEnum {
+        todo!()
+    }
+
+    pub fn color() -> OtherColors {
         todo!()
     }
 }
