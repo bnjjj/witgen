@@ -38,7 +38,7 @@ $ cargo install cargo-witgen
 
 - Replace the content of your `lib.rs` by:
 
-```rust
+```rust,ignore
 use witgen::witgen;
 
 #[witgen]
