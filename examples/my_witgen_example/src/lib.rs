@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, clippy::all, clippy::pedantic, clippy::nursery)]
 use std::collections::HashMap;
 use witgen::witgen;
 

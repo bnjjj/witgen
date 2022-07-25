@@ -1,4 +1,4 @@
-#![allow(dead_code)]
+#![allow(dead_code, clippy::all, clippy::pedantic, clippy::nursery)]
 
 /// Example of an external dependency
 #[witgen::witgen]
