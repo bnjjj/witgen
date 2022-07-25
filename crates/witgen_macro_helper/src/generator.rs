@@ -107,8 +107,8 @@ pub fn gen_wit_enum(enm: &ItemEnum) -> Result<String> {
             let ident = wit_ident(&variant.ident)?;
             let comment = get_doc_comment(&variant.attrs, 1, false)?;
             let variant_string = match &variant.fields {
-                syn::Fields::Named(_named) => {
-                    let fields = gen_fields(_named.named.iter().collect())?.join(",\n");
+                syn::Fields::Named(named) => {
+                    let fields = gen_fields(named.named.iter().collect())?.join(",\n");
                     let inner_type_name = &format!("{}-{}", enm_name, ident);
                     let comment = get_doc_comment(&variant.attrs, 0, false)?;
                     write!(
