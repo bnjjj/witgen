@@ -101,6 +101,7 @@ resource example-resource {
   f: func(w: with-named-fields) -> test-enum
   ///@mutable
   fee: func(w: with-named-fields) -> test-enum
+  static color: func() -> other-colors
 }
 /// Example of an external dependency
 type external-dep = string
@@ -118,3 +119,9 @@ resource sample-resource {
 }
 
 faa: func()
+
+enum other-colors {
+  orange,
+  purple,
+  black,
+}
