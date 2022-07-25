@@ -5,7 +5,7 @@
 [![Version](https://img.shields.io/crates/v/witgen.svg)](https://crates.io/crates/witgen)
 [![Docs.rs](https://docs.rs/witgen/badge.svg)](https://docs.rs/witgen)
 
-witgen is a library and a CLI that helps you generate [wit definitions](https://github.com/bytecodealliance/wit-bindgen/blob/main/WIT.md) in a wit file for WebAssembly. Using this lib in addition to [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen) will help you to import/export types and functions from/to wasm module.
+witgen is a library and a CLI that helps you generate [wit definitions](https://github.com/bytecodealliance/wit-bindgen/blob/main/WIT.md) in a wit file for WebAssembly. Using this lib in addition to [wit-bindgen](https://github.com/bytecodealliance/wit-bindgen) will help you to import/export types and functions from/to wasm module. This project currently supports the wit parser at version `0.2.0` see [here](https://github.com/ahalabs/wit-bindgen).
 
 ## Getting started
 
@@ -42,6 +42,10 @@ $ cargo install cargo-witgen
 use witgen::witgen;
 
 #[witgen]
+use other_crate::*;
+
+/// Doc strings are supported!
+#[witgen]
 struct TestStruct {
     inner: String,
 }
@@ -59,6 +63,15 @@ fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result
     // You may add an example implementation or just satisfy the compiler with a `todo!()`.
     Ok((String::from("test"), 0i64))
 }
+
+#[witgen]
+impl AResource {
+  pub fn foo(&self) {}
+
+  pub fn faa(&mut self) {}
+
+  pub fn fee() {}
+}
 ```
 
 - Then you can launch the CLI (at the root of your package):
@@ -70,6 +83,10 @@ cargo witgen generate
 - It will generate a `index.wit` file at the root of your package:
 
 ```wit
+
+use * from other-crate
+
+/// Doc strings are supported!
 record test-struct {
     inner: string
 }
@@ -80,7 +97,17 @@ variant test-enum {
     string-variant(string),
 }
 
-test : function(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> expected<tuple<string, s64>>
+test : func(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> expected<tuple<string, s64>>
+
+resource a-resource {
+  foo: func()
+
+  /// @mutable
+  faa: func()
+
+  static fee: func()
+
+}
 ```
 
 - You can find more complete examples [here](./examples)
@@ -89,11 +116,10 @@ test : function(other: list <u8>, test-struct: test-struct, other-enum: test-enu
 
 For now using `#[witgen]` have some limitations:
 
-- You can use the proc macro `#[witgen]` only on `struct`, `enum`, `type alias`, `function`
-- Generic parameters or lifetime anotations are not supported, except for `HashMap`, which is interpreted as `list<tuple<key, value>>`.
+- You can use the proc macro `#[witgen]` only on `struct`, `enum`, `type alias`, `function`,  `impl`, and `use`
+- Generic parameters or lifetime annotations are not supported, except for `HashMap`, which is interpreted as `list<tuple<key, value>>`.
 - Type `&str` is not supported (but you can use `String`)
 - References, `Box`, `Rc`, `Arc` and all types of smart pointers are not supported
-- Methods are not supported
 - There is no semantic analysis, which means if your `function`, `struct` or `enum` uses a non scalar type, you have to add `#[witgen]` where this type is declared (it won't fail at the compile time)
 
 ## Development
