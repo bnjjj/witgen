@@ -7,7 +7,8 @@ All notable changes to this project will be documented in this file.
 ### Added
 - function --> func
 - can use `use * from id`; This searches deps for `id`. Currently only top level paths.
-- can use `impl`s, which create's a corresponding `resource` with static methods and instance methods with `@mutable` for methods with `&mut self`
+- can use `impl`s, which create's a corresponding `resource` with static methods and instance methods with `@mutable` for methods with `&mut self`.
+- Methods with `#[attribute_macro]` are converted to special doc comments: `///@attribute_macro`
 - Added `aha-wit-parser` version `0.2.0`, to ensure generated wit is valid and will resolve deps used in `use`.
 
 ---

@@ -47,6 +47,7 @@ use other_crate::*;
 /// Doc strings are supported!
 #[witgen]
 struct TestStruct {
+    /// Even for fields!
     inner: String,
 }
 
@@ -66,8 +67,10 @@ fn test(other: Vec<u8>, test_struct: TestStruct, other_enum: TestEnum) -> Result
 
 #[witgen]
 impl AResource {
+  /// Can convert custom attributes to doc strings
+  #[custom_attribute]
   pub fn foo(&self) {}
-
+  /// Have special mutable attribute
   pub fn faa(&mut self) {}
 
   pub fn fee() {}
@@ -88,25 +91,26 @@ use * from other-crate
 
 /// Doc strings are supported!
 record test-struct {
-    inner: string
+  /// Even for fields!
+  inner: string
 }
 
 variant test-enum {
-    unit,
-    number(u64),
-    string-variant(string),
+  unit,
+  number(u64),
+  string-variant(string),
 }
 
 test : func(other: list <u8>, test-struct: test-struct, other-enum: test-enum) -> expected<tuple<string, s64>>
 
 resource a-resource {
+  /// Can convert custom attributes to doc strings
+  /// @custom_attribute
   foo: func()
-
+  /// Have special mutable attribute
   /// @mutable
   faa: func()
-
   static fee: func()
-
 }
 ```
 
