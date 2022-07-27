@@ -1,10 +1,12 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code, unused_variables, clippy::all, clippy::pedantic, clippy::nursery)]
 use std::collections::HashMap;
+use witgen::witgen;
+
+#[witgen]
+use example_dep::*;
 
 mod extra_type;
 use extra_type::*;
-
-use witgen::witgen;
 
 #[witgen]
 enum Colors {
@@ -84,7 +86,6 @@ struct TestBis {
 /// Documentation over struct
 /// in multi-line
 struct TestTuple(usize, String);
-
 #[witgen]
 struct TestStruct {
     /// Doc comment over inner field in struct
@@ -95,6 +96,7 @@ struct TestStruct {
 #[witgen]
 enum TestEnum {
     /// Doc comment over UnitType variant in struct
+    /// Two lines
     UnitType,
     Number(u64),
     /// Doc comment over String variant in struct
@@ -123,3 +125,32 @@ type Float32Bit = f32;
 
 #[witgen]
 type Float64Bit = f64;
+
+#[witgen]
+pub fn use_ext_dep() -> ExternalDep {
+    String::from("hello")
+}
+
+struct ExampleResource {}
+
+/// This is an example wit interface
+#[witgen]
+impl ExampleResource {
+    fn foo() -> String {
+        todo!()
+    }
+
+    /// Has doc string
+    /// With two lines
+    pub fn f(&self, w: WithNamedFields) -> TestEnum {
+        todo!()
+    }
+
+    pub fn fee(&mut self, w: WithNamedFields) -> TestEnum {
+        todo!()
+    }
+
+    pub fn color() -> OtherColors {
+        todo!()
+    }
+}

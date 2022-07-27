@@ -1,10 +1,9 @@
 [package]
-edition = "2021"
-name = "my_witgen_example"
+name = "example-dep"
 version = "0.1.0"
+edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-example-dep = {path = "../example_dep"}
-witgen = {path = "../.."}
+witgen = { path = "../.." }

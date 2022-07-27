@@ -1,6 +1,3 @@
-// auto-generated file by witgen (https://github.com/bnjjj/witgen), please do not edit yourself, you can generate a new one thanks to cargo witgen generate command. (cargo-witgen v0.14.0) 
-
-use * from example-dep
 type string-alias = string
 
 type private-type = list<float32>
@@ -104,6 +101,7 @@ resource example-resource {
   f: func(w: with-named-fields) -> test-enum
   ///@mutable
   fee: func(w: with-named-fields) -> test-enum
+  static color: func() -> other-colors
 }
 /// Example of an external dependency
 type external-dep = string
@@ -121,3 +119,9 @@ resource sample-resource {
 }
 
 faa: func()
+
+enum other-colors {
+  orange,
+  purple,
+  black,
+}
