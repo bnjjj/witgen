@@ -30,15 +30,31 @@ jobs:
         with:
           toolchain: stable
           override: true
+      # - uses: actions-rs/cargo@v1
+      #   with:
+      #     command: install
+      #     args: cargo-workspaces
       - uses: actions-rs/cargo@v1
         with:
           command: install
-          args: cargo-workspaces
+          args: cargo-release
       - uses: actions-rs/cargo@v1
         with:
           command: login
           args: ${{secrets.CRATES_IO_TOKEN}}
+      # - uses: actions-rs/cargo@v1
+      #   with:
+      #     command: workspaces
+      #     args: publish --no-git-tag --no-git-commit -y
+      - name: Get Version
+        run: echo "version=${GITHUB_REF_NAME:1}" >> $GITHUB_OUTPUT
       - uses: actions-rs/cargo@v1
         with:
-          command: workspaces
-          args: publish --no-git-tag --no-git-commit -y
+          command: release
+          args: |
+            --workspace 
+            --exclude my_witgen_example 
+            --exclude example-dep 
+            ${{ steps.vars.output.version }}
+            
+
