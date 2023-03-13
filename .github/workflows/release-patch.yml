@@ -1,0 +1,51 @@
+name: release-patch
+
+on:
+  workflow_dispatch:
+    secrets:
+      CRATES_IO_TOKEN:
+        required: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up cargo cache
+        uses: actions/cache@v3
+        continue-on-error: false
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/            
+          key: ${{ runner.os }}-cargo
+          restore-keys: ${{ runner.os }}-cargo
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          override: true
+      - uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-release
+      - uses: actions-rs/cargo@v1
+        with:
+          command: login
+          args: ${{secrets.CRATES_IO_TOKEN}}
+      - uses: actions-rs/cargo@v1
+        with:
+          command: release
+          args: |
+            --workspace 
+            --exclude my_witgen_example 
+            --exclude example-dep 
+            patch
+            
+
