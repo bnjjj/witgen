@@ -1,9 +1,15 @@
 name: release
 
+# on:
+#   create:
+#     tags:
+#       - v*
+
 on:
-  create:
-    tags:
-      - v*
+  workflow_dispatch:
+    secrets:
+      CRATES_IO_TOKEN:
+        required: true
 
 env:
   CARGO_TERM_COLOR: always
@@ -46,8 +52,8 @@ jobs:
       #   with:
       #     command: workspaces
       #     args: publish --no-git-tag --no-git-commit -y
-      - name: Get Version
-        run: echo "version=${GITHUB_REF_NAME:1}" >> $GITHUB_OUTPUT
+      # - name: Get Version
+      #   run: echo "version=${GITHUB_REF_NAME:1}" >> $GITHUB_OUTPUT
       - uses: actions-rs/cargo@v1
         with:
           command: release
@@ -55,6 +61,6 @@ jobs:
             --workspace 
             --exclude my_witgen_example 
             --exclude example-dep 
-            ${{ steps.vars.output.version }}
+            patch
             
 
